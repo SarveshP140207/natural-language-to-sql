@@ -91,7 +91,18 @@ def build_display_label(
         last_name = row.get("last_name")
 
         if first_name and last_name:
-            return f"{first_name} {last_name}"
+            label = f"{first_name} {last_name}"
+
+            if "customer_id" in columns:
+                return f"{label} ({row.get('customer_id')})"
+
+            if "product_id" in columns:
+                return f"{label} ({row.get('product_id')})"
+
+            if "category_id" in columns:
+                return f"{label} ({row.get('category_id')})"
+
+            return label
 
     return str(row.get(x_column, ""))
 

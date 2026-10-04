@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Natural Language to SQL</title>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .container {
+            width: min(1200px, 92%);
+            margin: 40px auto;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .query-card,
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            margin-top: 14px;
+            padding: 11px 22px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 15px;
+            color: #6b7280;
+        }
+
+        .error {
+            display: none;
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        #analysis {
+            line-height: 1.6;
+        }
+
+        #chart {
+            width: 100%;
+            min-height: 420px;
+        }
+
+        .sql-container {
+            background: #111827;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .kpi {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Natural Language to SQL</h1>
+
+    <div class="subtitle">
+        Ask questions about your database using natural language.
+    </div>
+
+    <div class="query-card">
+
+        <h2 class="section-title">Ask a Question</h2>
+
+        <textarea
+            id="question"
+            placeholder="Example: Who are the top 5 customers by total order amount?"
+        ></textarea>
+
+        <button id="runButton" onclick="runQuery()">
+            Run Query
+        </button>
+
+        <div id="loading" class="loading">
+            Processing your question...
+        </div>
+
+        <div id="error" class="error"></div>
+
+    </div>
+
+    <div id="results" class="hidden">
+
+        <div class="result-card">
+
+            <h2 class="section-title">Answer</h2>
+
+            <div id="analysis"></div>
+
+        </div>
+
+        <div class="result-card">
+
+            <h2 class="section-title">Visualization</h2>
+
+            <div id="chart"></div>
+
+        </div>
+
+        <div class="result-card">
+
+            <h2 class="section-title">SQL Query</h2>
+
+            <div class="sql-container">
+                <pre id="sql"></pre>
+            </div>
+
+        </div>
+
+        <div class="result-card">
+
+            <h2 class="section-title">Query Results</h2>
+
+            <div id="table" class="table-container"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+async function runQuery() {
+
+    const questionInput = document.getElementById("question");
+    const runButton = document.getElementById("runButton");
+    const loading = document.getElementById("loading");
+    const error = document.getElementById("error");
+    const results = document.getElementById("results");
+
+    const question = questionInput.value.trim();
+
+    if (!question) {
+        error.textContent = "Please enter a question.";
+        error.style.display = "block";
+        return;
+    }
+
+    error.style.display = "none";
+    results.classList.add("hidden");
+
+    runButton.disabled = true;
+    loading.style.display = "block";
+
+    try {
+
+        const response = await fetch("/query", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                question: question
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || "The query could not be processed."
+            );
+        }
+
+        displayResults(data);
+
+        results.classList.remove("hidden");
+
+    } catch (err) {
+
+        error.textContent = err.message;
+        error.style.display = "block";
+
+    } finally {
+
+        runButton.disabled = false;
+        loading.style.display = "none";
+    }
+}
+
+
+function displayResults(data) {
+
+    document.getElementById("analysis").textContent =
+        data.analysis || "No analysis available.";
+
+    document.getElementById("sql").textContent =
+        data.sql || "";
+
+    renderVisualization(data.visualization);
+
+    renderTable(data.result);
+}
+
+
+function renderVisualization(visualization) {
+
+    const chart = document.getElementById("chart");
+
+    chart.innerHTML = "";
+
+    if (!visualization) {
+        return;
+    }
+
+    if (visualization.type === "kpi") {
+
+        const value =
+            visualization.data &&
+            visualization.data.length > 0
+                ? visualization.data[0].value
+                : 0;
+
+        chart.innerHTML =
+            `<div class="kpi">${formatValue(value)}</div>`;
+
+        return;
+    }
+
+    if (
+        visualization.type !== "bar" &&
+        visualization.type !== "line"
+    ) {
+        chart.innerHTML =
+            "<p>No visualization is recommended for this result.</p>";
+
+        return;
+    }
+
+    const chartData = visualization.data || [];
+
+    const xValues = chartData.map(item => item.label);
+    const yValues = chartData.map(item => item.value);
+
+    const trace = {
+        x: xValues,
+        y: yValues,
+        type: visualization.type === "line"
+            ? "scatter"
+            : "bar",
+        mode: visualization.type === "line"
+            ? "lines+markers"
+            : undefined
+    };
+
+    const layout = {
+        title: visualization.title || "Query Results",
+        margin: {
+            t: 60,
+            r: 30,
+            b: 100,
+            l: 70
+        },
+        xaxis: {
+            title: visualization.x_column || ""
+        },
+        yaxis: {
+            title: visualization.y_column || ""
+        },
+        responsive: true
+    };
+
+    Plotly.newPlot(
+        chart,
+        [trace],
+        layout,
+        {
+            responsive: true,
+            displayModeBar: false
+        }
+    );
+}
+
+
+function renderTable(result) {
+
+    const tableContainer =
+        document.getElementById("table");
+
+    tableContainer.innerHTML = "";
+
+    if (
+        !result ||
+        !result.columns ||
+        !result.rows
+    ) {
+        return;
+    }
+
+    if (result.rows.length === 0) {
+
+        tableContainer.innerHTML =
+            "<p>No matching records found.</p>";
+
+        return;
+    }
+
+    const table =
+        document.createElement("table");
+
+    const thead =
+        document.createElement("thead");
+
+    const headerRow =
+        document.createElement("tr");
+
+    result.columns.forEach(column => {
+
+        const th =
+            document.createElement("th");
+
+        th.textContent = column;
+
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+
+    const tbody =
+        document.createElement("tbody");
+
+    result.rows.forEach(row => {
+
+        const tr =
+            document.createElement("tr");
+
+        result.columns.forEach(column => {
+
+            const td =
+                document.createElement("td");
+
+            td.textContent =
+                formatValue(row[column]);
+
+            tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    tableContainer.appendChild(table);
+}
+
+
+function formatValue(value) {
+
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    if (
+        typeof value === "number" &&
+        Number.isFinite(value)
+    ) {
+        return value.toLocaleString();
+    }
+
+    return String(value);
+}
+
+</script>
+
+</body>
+</html>

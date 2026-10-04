@@ -26,3 +26,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local Qdrant vector database
+qdrant_data/
