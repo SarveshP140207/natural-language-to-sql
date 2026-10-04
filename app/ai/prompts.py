@@ -35,11 +35,29 @@ CONVERSATION CONTEXT:
 {conversation_context}
 
 IMPORTANT CONVERSATION RULES:
-1. Use previous conversation context when the current question refers to earlier results.
-2. Resolve references such as "them", "their", "those", "that", and "the same" using the conversation context.
-3. If the current question is independent, ignore the previous conversation context.
-4. Do not blindly copy previous SQL. Generate a new query that answers the current question.
-5. Use the actual database schema as the final authority.
+1. The conversation context contains previous questions, SQL queries,
+   and actual result rows.
+2. Use previous result rows when the current question refers to
+   entities from an earlier result.
+3. Resolve references such as "them", "their", "those", "that",
+   "these", "the same", and "the second one" using the previous
+   result rows.
+4. When a follow-up refers to specific entities from a previous
+   result, DO NOT query the entire table and return unrelated rows.
+5. Identify the primary key or other identifying column in the
+   previous result and use it to restrict the new query.
+6. For example, if the previous result contains customer_id values
+   43, 41, 68, 45, and 82, and the user asks "Show their cities",
+   query the customers table for ONLY those customer_id values.
+7. When appropriate, use a WHERE ... IN (...) condition containing
+   the identifiers from the previous result.
+8. Preserve the meaning of the previous result when answering a
+   follow-up question.
+9. If the current question is independent, ignore the previous
+   conversation context.
+10. Do not blindly copy previous SQL. Generate a new query that
+    answers the current question.
+11. Use the actual database schema as the final authority.
 
 USER QUESTION:
 {question}

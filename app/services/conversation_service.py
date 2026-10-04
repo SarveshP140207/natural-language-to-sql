@@ -1,6 +1,9 @@
 from typing import Any
 
 
+MAX_RESULT_ROWS = 20
+
+
 class ConversationState:
     def __init__(self):
         self.messages: list[dict[str, Any]] = []
@@ -11,10 +14,16 @@ class ConversationState:
         sql: str,
         result: dict[str, Any],
     ):
+        result_snapshot = {
+            "columns": result.get("columns", []),
+            "rows": result.get("rows", [])[:MAX_RESULT_ROWS],
+            "row_count": result.get("row_count", 0),
+        }
+
         self.messages.append({
             "question": question,
             "sql": sql,
-            "result": result,
+            "result": result_snapshot,
         })
 
     def get_recent_messages(self, limit: int = 5):

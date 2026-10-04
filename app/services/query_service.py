@@ -19,11 +19,16 @@ def build_conversation_context() -> str:
     context_parts = []
 
     for index, message in enumerate(messages, start=1):
+        result = message["result"]
+
         context_parts.append(
             f"""Conversation {index}:
 Question: {message['question']}
 SQL: {message['sql']}
-Result row count: {message['result'].get('row_count', 0)}
+Result row count: {result.get('row_count', 0)}
+Result columns: {result.get('columns', [])}
+Result rows:
+{result.get('rows', [])}
 """
         )
 
