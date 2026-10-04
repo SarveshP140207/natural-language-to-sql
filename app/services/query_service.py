@@ -1,3 +1,4 @@
+from app.ai.result_analyzer import analyze_result
 from app.ai.sql_generator import generate_sql
 from app.ai.sql_repair import repair_sql
 from app.database.executor import execute_read_only_query
@@ -51,20 +52,22 @@ def process_query(question: str):
 
     conversation_context = build_conversation_context()
 
-    # 1. Generate SQL using the current question
-    #    and previous conversation context.
     sql = generate_sql(
         question=question,
         conversation_context=conversation_context
     )
 
-    # 2. Validate and prepare the generated SQL.
     prepared_sql = validate_and_prepare_sql(sql)
 
-    # 3. Execute with limited repair attempts.
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         try:
             result = execute_read_only_query(prepared_sql)
+
+            analysis = analyze_result(
+                question=question,
+                sql=prepared_sql,
+                result=result
+            )
 
             conversation_state.add_message(
                 question=question,
@@ -75,7 +78,8 @@ def process_query(question: str):
             return {
                 "question": question,
                 "sql": prepared_sql,
-                "result": result
+                "result": result,
+                "analysis": analysis
             }
 
         except Exception as error:
