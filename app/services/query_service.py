@@ -1,6 +1,7 @@
 from app.ai.result_analyzer import analyze_result
 from app.ai.sql_generator import generate_sql
 from app.ai.sql_repair import repair_sql
+from app.ai.visualization_analyzer import analyze_visualization
 from app.database.executor import execute_read_only_query
 from app.services.conversation_service import conversation_state
 from app.validation.query_limits import apply_query_limit
@@ -69,6 +70,11 @@ def process_query(question: str):
                 result=result
             )
 
+            visualization = analyze_visualization(
+                question=question,
+                result=result
+            )
+
             conversation_state.add_message(
                 question=question,
                 sql=prepared_sql,
@@ -79,7 +85,8 @@ def process_query(question: str):
                 "question": question,
                 "sql": prepared_sql,
                 "result": result,
-                "analysis": analysis
+                "analysis": analysis,
+                "visualization": visualization
             }
 
         except Exception as error:
