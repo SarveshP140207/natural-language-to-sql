@@ -1,0 +1,93 @@
+from sqlalchemy import inspect
+from sqlglot import exp
+
+from app.database.connection import engine
+
+
+def get_database_schema_map():
+    inspector = inspect(engine)
+
+    schema_map = {}
+
+    for table_name in inspector.get_table_names():
+        columns = inspector.get_columns(table_name)
+
+        schema_map[table_name] = {
+            column["name"]
+            for column in columns
+        }
+
+    return schema_map
+
+
+def extract_tables(expression):
+    tables = set()
+
+    for table in expression.find_all(exp.Table):
+        tables.add(table.name)
+
+    return tables
+
+
+def extract_columns(expression):
+    columns = {}
+
+    # Build alias -> real table mapping.
+    aliases = {}
+
+    for table in expression.find_all(exp.Table):
+        table_name = table.name
+        alias = table.alias
+
+        if alias:
+            aliases[alias] = table_name
+
+    for column in expression.find_all(exp.Column):
+        table_name = column.table
+        column_name = column.name
+
+        if table_name:
+            real_table_name = aliases.get(
+                table_name,
+                table_name
+            )
+
+            columns.setdefault(
+                real_table_name,
+                set()
+            ).add(column_name)
+
+    return columns
+
+
+def validate_generated_sql(expression):
+    schema_map = get_database_schema_map()
+
+    tables = extract_tables(expression)
+    columns = extract_columns(expression)
+
+    # Validate tables.
+    for table in tables:
+        if table not in schema_map:
+            raise ValueError(
+                f"Table '{table}' does not exist in the database."
+            )
+
+    # Validate columns.
+    for table, requested_columns in columns.items():
+        if table not in schema_map:
+            raise ValueError(
+                f"Table '{table}' does not exist in the database."
+            )
+
+        for column in requested_columns:
+            if column == "*":
+                continue
+
+            if column not in schema_map[table]:
+                raise ValueError(
+                    f"Column '{column}' does not exist "
+                    f"in table '{table}'."
+                )
+
+    return True
