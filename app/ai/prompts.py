@@ -1,7 +1,8 @@
 def build_sql_prompt(
     schema: dict,
     question: str,
-    rag_context: str = ""
+    rag_context: str = "",
+    conversation_context: str = ""
 ) -> str:
     schema_text = format_schema(schema)
 
@@ -29,6 +30,16 @@ DATABASE SCHEMA:
 
 RETRIEVED RAG CONTEXT:
 {rag_context}
+
+CONVERSATION CONTEXT:
+{conversation_context}
+
+IMPORTANT CONVERSATION RULES:
+1. Use previous conversation context when the current question refers to earlier results.
+2. Resolve references such as "them", "their", "those", "that", and "the same" using the conversation context.
+3. If the current question is independent, ignore the previous conversation context.
+4. Do not blindly copy previous SQL. Generate a new query that answers the current question.
+5. Use the actual database schema as the final authority.
 
 USER QUESTION:
 {question}

@@ -5,7 +5,10 @@ from app.rag.retriever import retrieve_schema_context
 from app.validation.sql_cleaner import clean_sql_response
 
 
-def generate_sql(question: str) -> str:
+def generate_sql(
+    question: str,
+    conversation_context: str = ""
+) -> str:
     schema = get_database_schema()
 
     retrieved_documents = retrieve_schema_context(
@@ -21,7 +24,8 @@ def generate_sql(question: str) -> str:
     prompt = build_sql_prompt(
         schema=schema,
         question=question,
-        rag_context=rag_context
+        rag_context=rag_context,
+        conversation_context=conversation_context
     )
 
     response = generate_response(prompt)
