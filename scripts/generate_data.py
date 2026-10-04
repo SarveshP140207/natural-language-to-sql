@@ -12,8 +12,8 @@ load_dotenv()
 DB_CONFIG = {
     "host": os.getenv("MYSQL_HOST", "localhost"),
     "port": int(os.getenv("MYSQL_PORT", "3306")),
-    "user": "nl_sql_writer",
-    "password": "Cit@2025",
+    "user": os.getenv("MYSQL_WRITER_USER"),
+    "password": os.getenv("MYSQL_WRITER_PASSWORD"),
     "database": os.getenv("MYSQL_DATABASE", "ecommerce_db"),
 }
 
