@@ -1,3 +1,5 @@
+from time import perf_counter
+
 from app.ai.result_analyzer import analyze_result
 from app.ai.sql_generator import generate_sql
 from app.ai.sql_repair import repair_sql
@@ -58,18 +60,24 @@ def process_query(
     conversation_context = build_conversation_context()
 
     sql = generate_sql(
-    	question=question,
-   	conversation_context=conversation_context,
-  	database_connection=database_connection,
+        question=question,
+        conversation_context=conversation_context,
+        database_connection=database_connection,
     )
 
     prepared_sql = validate_and_prepare_sql(sql)
 
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         try:
+            execution_start = perf_counter()
+
             result = execute_read_only_query(
                 prepared_sql,
                 database_connection,
+            )
+
+            execution_time_ms = round(
+                (perf_counter() - execution_start) * 1000
             )
 
             analysis = analyze_result(
@@ -95,6 +103,7 @@ def process_query(
                 "result": result,
                 "analysis": analysis,
                 "visualization": visualization,
+                "execution_time_ms": execution_time_ms,
             }
 
         except Exception as error:

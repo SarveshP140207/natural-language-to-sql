@@ -5,10 +5,12 @@ from pydantic import BaseModel, Field
 
 from app.api.auth import router as auth_router
 from app.api.database import router as database_router
+from app.api.history import router as history_router
 from app.api_schema import router as schema_router
 from app.core.dependencies import get_current_user
 from app.database.models import User
 from app.services.connection_service import get_user_connection
+from app.services.history_service import save_query_history
 from app.services.query_service import process_query
 
 
@@ -23,6 +25,7 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(schema_router)
 app.include_router(auth_router)
 app.include_router(database_router)
+app.include_router(history_router)
 
 
 class QueryRequest(BaseModel):
@@ -56,19 +59,32 @@ def query_database(
         )
 
     try:
-        return process_query(
+        result = process_query(
             question=request.question,
             database_connection=connection,
         )
 
+        history = save_query_history(
+            user_id=current_user.user_id,
+            connection_id=connection.connection_id,
+            question=request.question,
+            sql_query=result["sql"],
+            result=result["result"],
+            execution_time_ms=result["execution_time_ms"],
+        )
+
+        result["history_id"] = history.history_id
+
+        return result
+
     except ValueError as error:
         raise HTTPException(
             status_code=400,
-            detail=str(error)
+            detail=str(error),
         )
 
     except Exception as error:
         raise HTTPException(
             status_code=500,
-            detail=f"Query processing failed: {error}"
+            detail=f"Query processing failed: {error}",
         )
