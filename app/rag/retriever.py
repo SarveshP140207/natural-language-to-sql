@@ -6,6 +6,7 @@ from app.rag.indexer import (
     COLLECTION_NAME,
     get_qdrant_client,
 )
+from app.rag.reranker import rerank_results
 
 
 def reciprocal_rank_fusion(
@@ -37,6 +38,10 @@ def retrieve_schema_context(
 
     documents = generate_schema_documents()
 
+    # Retrieve more candidates than the final number needed.
+    # The reranker will select the strongest results.
+    candidate_k = max(top_k * 3, 10)
+
     # -------------------------
     # 1. Semantic retrieval
     # -------------------------
@@ -51,7 +56,7 @@ def retrieve_schema_context(
     vector_results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=query_embedding,
-        limit=top_k,
+        limit=candidate_k,
     )
 
     vector_ranked = [
@@ -78,7 +83,7 @@ def retrieve_schema_context(
         range(len(bm25_scores)),
         key=lambda index: bm25_scores[index],
         reverse=True
-    )[:top_k]
+    )[:candidate_k]
 
     bm25_ranked = [
         documents[index]["table"]
@@ -97,7 +102,7 @@ def retrieve_schema_context(
     )
 
     # -------------------------
-    # 4. Return fused documents
+    # 4. Build fused documents
     # -------------------------
 
     document_map = {
@@ -105,16 +110,26 @@ def retrieve_schema_context(
         for document in documents
     }
 
-    results = []
+    fused_results = []
 
-    for table in fused_tables[:top_k]:
+    for table in fused_tables[:candidate_k]:
         document = document_map[table]
 
-        results.append({
+        fused_results.append({
             "score": 0,
             "content": document["content"],
             "type": document["type"],
             "table": document["table"],
         })
 
-    return results
+    # -------------------------
+    # 5. CrossEncoder reranking
+    # -------------------------
+
+    reranked_results = rerank_results(
+        question,
+        fused_results,
+        top_k=top_k,
+    )
+
+    return reranked_results
