@@ -68,3 +68,21 @@ def get_user_connections(user_id: int):
 
     finally:
         db.close()
+
+
+def get_user_connection(
+    user_id: int,
+    connection_id: int,
+):
+    db = AppSessionLocal()
+
+    try:
+        return db.scalar(
+            select(DatabaseConnection).where(
+                (DatabaseConnection.connection_id == connection_id)
+                & (DatabaseConnection.user_id == user_id)
+            )
+        )
+
+    finally:
+        db.close()

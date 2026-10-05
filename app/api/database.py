@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_current_user
+from app.database.connection_tester import test_mysql_connection
 from app.database.models import User
 from app.schemas.database import (
     DatabaseConnectionCreate,
@@ -8,6 +9,7 @@ from app.schemas.database import (
 )
 from app.services.connection_service import (
     create_database_connection,
+    get_user_connection,
     get_user_connections,
 )
 
@@ -77,3 +79,46 @@ def list_database_connections(
         )
         for connection in connections
     ]
+
+
+@router.post(
+    "/connections/{connection_id}/test",
+)
+def test_saved_database_connection(
+    connection_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    connection = get_user_connection(
+        user_id=current_user.user_id,
+        connection_id=connection_id,
+    )
+
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database connection not found.",
+        )
+
+    try:
+        success = test_mysql_connection(
+            host=connection.host,
+            port=connection.port,
+            database_name=connection.database_name,
+            username=connection.username,
+            encrypted_password=connection.password_encrypted,
+        )
+
+        return {
+            "connection_id": connection.connection_id,
+            "status": "success" if success else "failed",
+            "message": "Database connection successful."
+            if success
+            else "Database connection failed.",
+        }
+
+    except Exception as error:
+        return {
+            "connection_id": connection.connection_id,
+            "status": "failed",
+            "message": f"Database connection failed: {error}",
+        }
