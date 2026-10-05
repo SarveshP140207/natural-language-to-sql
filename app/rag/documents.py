@@ -2,6 +2,10 @@ from app.database.introspector import get_database_schema
 from app.database.models import DatabaseConnection
 from app.rag.business_rules import BUSINESS_RULES
 from app.rag.sql_examples import SQL_EXAMPLES
+from app.services.business_rule_service import (
+    get_connection_business_rules,
+    serialize_business_rule,
+)
 
 
 def generate_schema_documents(
@@ -10,6 +14,10 @@ def generate_schema_documents(
     schema = get_database_schema(database_connection)
 
     documents = []
+
+    # -------------------------
+    # Schema documents
+    # -------------------------
 
     for table in schema["tables"]:
         lines = [
@@ -56,17 +64,49 @@ def generate_schema_documents(
             "content": "\n".join(lines)
         })
 
-    for rule in BUSINESS_RULES:
-        documents.append({
-            "type": "business_rule",
-            "table": ", ".join(rule["tables"]),
-            "content": (
-                f"BUSINESS RULE: {rule['title']}\n\n"
-                f"{rule['description']}\n\n"
-                f"RELATED TABLES: {', '.join(rule['tables'])}\n"
-                f"RELATED COLUMNS: {', '.join(rule['columns'])}"
-            )
-        })
+    # -------------------------
+    # Business rules
+    # -------------------------
+
+    if database_connection is not None:
+        rules = get_connection_business_rules(
+            database_connection.connection_id
+        )
+
+        for rule in rules:
+            rule_data = serialize_business_rule(rule)
+
+            documents.append({
+                "type": "business_rule",
+                "table": ", ".join(
+                    rule_data["table_names"]
+                ),
+                "content": (
+                    f"BUSINESS RULE: {rule_data['title']}\n\n"
+                    f"{rule_data['description']}\n\n"
+                    f"RELATED TABLES: "
+                    f"{', '.join(rule_data['table_names'])}\n"
+                    f"RELATED COLUMNS: "
+                    f"{', '.join(rule_data['column_names'])}"
+                )
+            })
+
+    else:
+        for rule in BUSINESS_RULES:
+            documents.append({
+                "type": "business_rule",
+                "table": ", ".join(rule["tables"]),
+                "content": (
+                    f"BUSINESS RULE: {rule['title']}\n\n"
+                    f"{rule['description']}\n\n"
+                    f"RELATED TABLES: {', '.join(rule['tables'])}\n"
+                    f"RELATED COLUMNS: {', '.join(rule['columns'])}"
+                )
+            })
+
+    # -------------------------
+    # SQL examples
+    # -------------------------
 
     for example in SQL_EXAMPLES:
         documents.append({
