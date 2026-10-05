@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.database.app_connection import AppSessionLocal
 from app.database.models import Conversation, ConversationMessage
@@ -67,6 +67,60 @@ def list_user_conversations(
                 Conversation.updated_at.desc()
             )
         ).all()
+
+    finally:
+        db.close()
+
+
+def get_user_conversation_messages(
+    user_id: int,
+    conversation_id: int,
+):
+    conversation = get_user_conversation(
+        user_id=user_id,
+        conversation_id=conversation_id,
+    )
+
+    if not conversation:
+        raise ValueError("Conversation not found.")
+
+    db = AppSessionLocal()
+
+    try:
+        return db.scalars(
+            select(ConversationMessage)
+            .where(
+                ConversationMessage.conversation_id
+                == conversation_id
+            )
+            .order_by(
+                ConversationMessage.message_id.asc()
+            )
+        ).all()
+
+    finally:
+        db.close()
+
+
+def delete_user_conversation(
+    user_id: int,
+    conversation_id: int,
+) -> bool:
+    conversation = get_user_conversation(
+        user_id=user_id,
+        conversation_id=conversation_id,
+    )
+
+    if not conversation:
+        return False
+
+    db = AppSessionLocal()
+
+    try:
+        db.delete(conversation)
+        db.commit()
+
+        return True
 
     finally:
         db.close()

@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from app.api.auth import router as auth_router
+from app.api.conversation import router as conversation_router
 from app.api.database import router as database_router
 from app.api.history import router as history_router
 from app.api_schema import router as schema_router
@@ -30,6 +31,7 @@ app.include_router(schema_router)
 app.include_router(auth_router)
 app.include_router(database_router)
 app.include_router(history_router)
+app.include_router(conversation_router)
 
 
 class QueryRequest(BaseModel):
