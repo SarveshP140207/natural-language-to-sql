@@ -6,8 +6,6 @@
 
     <title>Natural Language to SQL</title>
 
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-
     <style>
         * {
             box-sizing: border-box;
@@ -16,103 +14,382 @@
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7fb;
+            background: #f4f6f8;
             color: #1f2937;
         }
 
-        .container {
-            width: min(1200px, 92%);
-            margin: 40px auto;
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
         }
 
-        h1 {
-            margin-bottom: 8px;
+        button {
+            cursor: pointer;
         }
 
-        .subtitle {
-            color: #6b7280;
-            margin-bottom: 30px;
+        .hidden {
+            display: none !important;
         }
 
-        .query-card,
-        .result-card {
-            background: white;
-            border-radius: 12px;
+        /* =========================
+           LOGIN
+        ========================= */
+
+        .auth-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            background:
+                radial-gradient(circle at top left, #e8eefc, transparent 40%),
+                #f4f6f8;
         }
 
-        textarea {
+        .auth-card {
+            width: min(440px, 100%);
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-card h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .auth-subtitle {
+            margin: 0 0 28px;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
             width: 100%;
-            min-height: 120px;
-            padding: 14px;
+            padding: 11px 12px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
-            resize: vertical;
-            font-size: 15px;
-            font-family: inherit;
+            background: white;
         }
 
+        .form-group input:focus,
+        .form-group select:focus,
         textarea:focus {
             outline: none;
             border-color: #2563eb;
         }
 
-        button {
-            margin-top: 14px;
-            padding: 11px 22px;
+        .primary-button {
+            width: 100%;
+            padding: 12px 16px;
             border: none;
             border-radius: 8px;
             background: #2563eb;
             color: white;
-            font-size: 15px;
-            cursor: pointer;
+            font-weight: 600;
         }
 
-        button:hover {
+        .primary-button:hover {
             background: #1d4ed8;
         }
 
-        button:disabled {
+        .secondary-button {
+            padding: 9px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+        }
+
+        .secondary-button:hover {
+            background: #f9fafb;
+        }
+
+        .danger-button {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 8px;
+            background: #dc2626;
+            color: white;
+        }
+
+        .danger-button:hover {
+            background: #b91c1c;
+        }
+
+        .auth-switch {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .auth-switch button {
+            border: none;
+            background: none;
+            color: #2563eb;
+            padding: 0;
+            font-weight: 600;
+        }
+
+        .message {
+            margin-top: 14px;
+            padding: 11px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* =========================
+           APP LAYOUT
+        ========================= */
+
+        .app-screen {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 270px 1fr;
+        }
+
+        .sidebar {
+            background: #111827;
+            color: #e5e7eb;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .brand {
+            margin-bottom: 24px;
+        }
+
+        .brand h2 {
+            margin: 0;
+            color: white;
+            font-size: 20px;
+        }
+
+        .brand p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 22px;
+        }
+
+        .sidebar-section-title {
+            margin-bottom: 9px;
+            color: #9ca3af;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-item {
+            width: 100%;
+            padding: 10px 11px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #d1d5db;
+            text-align: left;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background: #1f2937;
+            color: white;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #1f2937;
+        }
+
+        .user-name {
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #d1d5db;
+        }
+
+        .logout-button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            background: transparent;
+            color: #e5e7eb;
+        }
+
+        .main-content {
+            min-width: 0;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .page-title h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .page-title p {
+            margin: 6px 0 0;
+            color: #6b7280;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* =========================
+           CARDS
+        ========================= */
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .connection-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .connection-row select {
+            flex: 1;
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .connection-info {
+            margin-top: 10px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .query-input {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            padding: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .query-actions {
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .run-button {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-weight: 600;
+        }
+
+        .run-button:hover {
+            background: #1d4ed8;
+        }
+
+        .run-button:disabled {
             background: #9ca3af;
             cursor: not-allowed;
         }
 
         .loading {
-            display: none;
-            margin-top: 15px;
+            margin-top: 12px;
             color: #6b7280;
+            font-size: 14px;
         }
 
-        .error {
-            display: none;
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 14px;
-            border-radius: 8px;
-            margin-top: 15px;
+        /* =========================
+           RESULTS
+        ========================= */
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        .section-title {
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-
-        #analysis {
+        .answer-box {
             line-height: 1.6;
+            color: #374151;
         }
 
-        #chart {
-            width: 100%;
-            min-height: 420px;
-        }
-
-        .sql-container {
+        .sql-box {
             background: #111827;
             color: #e5e7eb;
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 9px;
             overflow-x: auto;
         }
 
@@ -133,9 +410,10 @@
 
         th,
         td {
-            padding: 12px;
+            padding: 11px;
             border-bottom: 1px solid #e5e7eb;
             text-align: left;
+            font-size: 14px;
         }
 
         th {
@@ -143,82 +421,599 @@
             font-weight: 600;
         }
 
-        .hidden {
+        .metadata {
+            margin-top: 12px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        /* =========================
+           SIDEBAR CONTENT
+        ========================= */
+
+        .section-panel {
             display: none;
         }
 
-        .kpi {
-            font-size: 42px;
-            font-weight: bold;
-            margin: 10px 0;
+        .section-panel.active {
+            display: block;
+        }
+
+        .list-card {
+            padding: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .list-card-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .list-card-meta {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .rule-content {
+            line-height: 1.5;
+            color: #4b5563;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            color: #6b7280;
+            padding: 12px 0;
+        }
+
+        /* =========================
+           MODAL
+        ========================= */
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 20;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            width: min(560px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close-button {
+            border: none;
+            background: none;
+            font-size: 22px;
+            color: #6b7280;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 900px) {
+            .app-screen {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                min-height: auto;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- =========================
+     AUTH SCREEN
+========================= -->
 
-    <h1>Natural Language to SQL</h1>
+<div id="authScreen" class="auth-screen">
 
-    <div class="subtitle">
-        Ask questions about your database using natural language.
-    </div>
+    <div class="auth-card">
 
-    <div class="query-card">
+        <h1>Natural Language to SQL</h1>
 
-        <h2 class="section-title">Ask a Question</h2>
+        <p id="authSubtitle" class="auth-subtitle">
+            Sign in to query your connected databases.
+        </p>
 
-        <textarea
-            id="question"
-            placeholder="Example: Who are the top 5 customers by total order amount?"
-        ></textarea>
+        <div id="registerFields" class="hidden">
 
-        <button id="runButton" onclick="runQuery()">
-            Run Query
-        </button>
-
-        <div id="loading" class="loading">
-            Processing your question...
-        </div>
-
-        <div id="error" class="error"></div>
-
-    </div>
-
-    <div id="results" class="hidden">
-
-        <div class="result-card">
-
-            <h2 class="section-title">Answer</h2>
-
-            <div id="analysis"></div>
-
-        </div>
-
-        <div class="result-card">
-
-            <h2 class="section-title">Visualization</h2>
-
-            <div id="chart"></div>
-
-        </div>
-
-        <div class="result-card">
-
-            <h2 class="section-title">SQL Query</h2>
-
-            <div class="sql-container">
-                <pre id="sql"></pre>
+            <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input id="registerEmail" type="email">
             </div>
 
         </div>
 
-        <div class="result-card">
+        <div class="form-group">
+            <label for="authUsername">Username</label>
+            <input id="authUsername" type="text" autocomplete="username">
+        </div>
 
-            <h2 class="section-title">Query Results</h2>
+        <div class="form-group">
+            <label for="authPassword">Password</label>
+            <input id="authPassword" type="password" autocomplete="current-password">
+        </div>
 
-            <div id="table" class="table-container"></div>
+        <button id="authButton" class="primary-button" onclick="submitAuth()">
+            Sign In
+        </button>
+
+        <div id="authMessage" class="hidden"></div>
+
+        <div class="auth-switch">
+            <span id="authSwitchText">Don't have an account?</span>
+            <button onclick="toggleAuthMode()">Create one</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     APP SCREEN
+========================= -->
+
+<div id="appScreen" class="app-screen hidden">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <h2>Natural Language to SQL</h2>
+            <p>Database assistant</p>
+        </div>
+
+        <div class="sidebar-section">
+
+            <div class="sidebar-section-title">
+                Workspace
+            </div>
+
+            <div class="sidebar-list">
+
+                <button
+                    class="sidebar-item active"
+                    onclick="showSection('querySection', this)"
+                >
+                    Query
+                </button>
+
+                <button
+                    class="sidebar-item"
+                    onclick="showSection('historySection', this); loadHistory()"
+                >
+                    Query History
+                </button>
+
+                <button
+                    class="sidebar-item"
+                    onclick="showSection('conversationSection', this); loadConversations()"
+                >
+                    Conversations
+                </button>
+
+                <button
+                    class="sidebar-item"
+                    onclick="showSection('rulesSection', this); loadBusinessRules()"
+                >
+                    Business Rules
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="sidebar-section">
+
+            <div class="sidebar-section-title">
+                Database
+            </div>
+
+            <div class="sidebar-list">
+
+                <button
+                    class="sidebar-item"
+                    onclick="openConnectionModal()"
+                >
+                    Add Connection
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="sidebar-footer">
+
+            <div id="currentUser" class="user-name"></div>
+
+            <button
+                class="logout-button"
+                onclick="logout()"
+            >
+                Sign Out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="topbar">
+
+            <div class="page-title">
+
+                <h1>Database Assistant</h1>
+
+                <p>
+                    Ask questions using natural language and get real SQL results.
+                </p>
+
+            </div>
+
+            <div class="topbar-actions">
+
+                <button
+                    class="secondary-button"
+                    onclick="testSelectedConnection()"
+                >
+                    Test Connection
+                </button>
+
+                <button
+                    class="secondary-button"
+                    onclick="startNewConversation()"
+                >
+                    New Conversation
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             QUERY
+        ========================= -->
+
+        <section id="querySection" class="section-panel active">
+
+            <div class="card">
+
+                <div class="card-header">
+                    <h2>Database Connection</h2>
+                </div>
+
+                <div class="connection-row">
+
+                    <select
+                        id="connectionSelect"
+                        onchange="connectionChanged()"
+                    >
+                        <option value="">
+                            Select a database
+                        </option>
+                    </select>
+
+                    <button
+                        class="secondary-button"
+                        onclick="openConnectionModal()"
+                    >
+                        Add
+                    </button>
+
+                </div>
+
+                <div
+                    id="connectionInfo"
+                    class="connection-info"
+                >
+                    No database selected.
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-header">
+                    <h2>Ask a Question</h2>
+                </div>
+
+                <textarea
+                    id="question"
+                    class="query-input"
+                    placeholder="Example: Which category has the most products?"
+                ></textarea>
+
+                <div class="query-actions">
+
+                    <button
+                        id="runButton"
+                        class="run-button"
+                        onclick="runQuery()"
+                    >
+                        Ask Database
+                    </button>
+
+                </div>
+
+                <div
+                    id="loading"
+                    class="loading hidden"
+                >
+                    Processing your question...
+                </div>
+
+                <div
+                    id="queryError"
+                    class="message error hidden"
+                ></div>
+
+            </div>
+
+
+            <div id="resultsContainer" class="hidden">
+
+                <div class="result-grid">
+
+                    <div class="card">
+
+                        <div class="card-header">
+                            <h2>Answer</h2>
+                        </div>
+
+                        <div
+                            id="analysis"
+                            class="answer-box"
+                        >
+                            No answer yet.
+                        </div>
+
+                        <div
+                            id="queryMetadata"
+                            class="metadata"
+                        ></div>
+
+                    </div>
+
+
+                    <div class="card">
+
+                        <div class="card-header">
+                            <h2>Generated SQL</h2>
+                        </div>
+
+                        <div class="sql-box">
+                            <pre id="sql"></pre>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <h2>Query Results</h2>
+                    </div>
+
+                    <div
+                        id="resultTable"
+                        class="table-container"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             HISTORY
+        ========================= -->
+
+        <section id="historySection" class="section-panel">
+
+            <div class="card">
+
+                <div class="card-header">
+                    <h2>Query History</h2>
+                    <button
+                        class="secondary-button"
+                        onclick="loadHistory()"
+                    >
+                        Refresh
+                    </button>
+                </div>
+
+                <div id="historyList"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             CONVERSATIONS
+        ========================= -->
+
+        <section id="conversationSection" class="section-panel">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h2>Conversations</h2>
+
+                    <button
+                        class="secondary-button"
+                        onclick="startNewConversation()"
+                    >
+                        New
+                    </button>
+
+                </div>
+
+                <div id="conversationList"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             BUSINESS RULES
+        ========================= -->
+
+        <section id="rulesSection" class="section-panel">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h2>Business Rules</h2>
+
+                    <button
+                        class="secondary-button"
+                        onclick="openRuleModal()"
+                    >
+                        Add Rule
+                    </button>
+
+                </div>
+
+                <div id="rulesList"></div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- =========================
+     CONNECTION MODAL
+========================= -->
+
+<div id="connectionModal" class="modal-overlay">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2>Add Database Connection</h2>
+
+            <button
+                class="close-button"
+                onclick="closeConnectionModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input id="dbName" type="text" placeholder="Ecommerce Local">
+        </div>
+
+        <div class="form-group">
+            <label>Database Type</label>
+            <select id="dbType">
+                <option value="mysql">MySQL</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Host</label>
+            <input id="dbHost" type="text" value="localhost">
+        </div>
+
+        <div class="form-group">
+            <label>Port</label>
+            <input id="dbPort" type="number" value="3306">
+        </div>
+
+        <div class="form-group">
+            <label>Database Name</label>
+            <input id="dbDatabaseName" type="text">
+        </div>
+
+        <div class="form-group">
+            <label>Username</label>
+            <input id="dbUsername" type="text">
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input id="dbPassword" type="password">
+        </div>
+
+        <div id="connectionModalMessage" class="hidden"></div>
+
+        <div class="modal-actions">
+
+            <button
+                class="secondary-button"
+                onclick="closeConnectionModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                class="primary-button"
+                style="width:auto;"
+                onclick="saveConnection()"
+            >
+                Save Connection
+            </button>
 
         </div>
 
@@ -226,249 +1021,1691 @@
 
 </div>
 
+
+<!-- =========================
+     BUSINESS RULE MODAL
+========================= -->
+
+<div id="ruleModal" class="modal-overlay">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2>Add Business Rule</h2>
+
+            <button
+                class="close-button"
+                onclick="closeRuleModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="form-group">
+            <label>Title</label>
+            <input id="ruleTitle" type="text">
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea
+                id="ruleDescription"
+                class="query-input"
+                style="min-height:100px;"
+            ></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Table Names</label>
+            <input
+                id="ruleTables"
+                type="text"
+                placeholder="orders, payments"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Column Names</label>
+            <input
+                id="ruleColumns"
+                type="text"
+                placeholder="status, total_amount"
+            >
+        </div>
+
+        <div id="ruleModalMessage" class="hidden"></div>
+
+        <div class="modal-actions">
+
+            <button
+                class="secondary-button"
+                onclick="closeRuleModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                class="primary-button"
+                style="width:auto;"
+                onclick="saveBusinessRule()"
+            >
+                Save Rule
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
 <script>
+    let authMode = "login";
+    let token = localStorage.getItem("nl_sql_token") || "";
+    let currentUser = null;
+    let connections = [];
+    let currentConversationId = null;
+    let currentConnectionId = null;
 
-async function runQuery() {
 
-    const questionInput = document.getElementById("question");
-    const runButton = document.getElementById("runButton");
-    const loading = document.getElementById("loading");
-    const error = document.getElementById("error");
-    const results = document.getElementById("results");
+    /* =========================
+       AUTH
+    ========================= */
 
-    const question = questionInput.value.trim();
+    function toggleAuthMode() {
 
-    if (!question) {
-        error.textContent = "Please enter a question.";
-        error.style.display = "block";
-        return;
+        authMode =
+            authMode === "login"
+                ? "register"
+                : "login";
+
+        const registerFields =
+            document.getElementById("registerFields");
+
+        const authButton =
+            document.getElementById("authButton");
+
+        const authSubtitle =
+            document.getElementById("authSubtitle");
+
+        const authSwitchText =
+            document.getElementById("authSwitchText");
+
+        if (authMode === "register") {
+
+            registerFields.classList.remove("hidden");
+
+            authButton.textContent =
+                "Create Account";
+
+            authSubtitle.textContent =
+                "Create an account to start using the database assistant.";
+
+            authSwitchText.textContent =
+                "Already have an account?";
+
+        } else {
+
+            registerFields.classList.add("hidden");
+
+            authButton.textContent =
+                "Sign In";
+
+            authSubtitle.textContent =
+                "Sign in to query your connected databases.";
+
+            authSwitchText.textContent =
+                "Don't have an account?";
+        }
     }
 
-    error.style.display = "none";
-    results.classList.add("hidden");
 
-    runButton.disabled = true;
-    loading.style.display = "block";
+    async function submitAuth() {
 
-    try {
+        const username =
+            document.getElementById("authUsername").value.trim();
 
-        const response = await fetch("/query", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                question: question
-            })
-        });
+        const password =
+            document.getElementById("authPassword").value;
 
-        const data = await response.json();
+        const email =
+            document.getElementById("registerEmail").value.trim();
 
-        if (!response.ok) {
+        if (!username || !password) {
+            showAuthMessage(
+                "Username and password are required.",
+                true
+            );
+            return;
+        }
+
+        try {
+
+            if (authMode === "register") {
+
+                if (!email) {
+                    showAuthMessage(
+                        "Email is required.",
+                        true
+                    );
+                    return;
+                }
+
+                const registerResponse =
+                    await fetch("/auth/register", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            email: email,
+                            password: password
+                        })
+                    });
+
+                const registerData =
+                    await registerResponse.json();
+
+                if (!registerResponse.ok) {
+                    throw new Error(
+                        registerData.detail ||
+                        "Registration failed."
+                    );
+                }
+
+                showAuthMessage(
+                    "Account created. You can now sign in.",
+                    false
+                );
+
+                authMode = "login";
+                toggleAuthMode();
+
+                document.getElementById("authUsername").value =
+                    username;
+
+                document.getElementById("authPassword").value =
+                    "";
+
+                return;
+            }
+
+
+            const response =
+                await fetch("/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Login failed."
+                );
+            }
+
+            token = data.access_token;
+
+            localStorage.setItem(
+                "nl_sql_token",
+                token
+            );
+
+            await initializeApp();
+
+        } catch (error) {
+
+            showAuthMessage(
+                error.message,
+                true
+            );
+        }
+    }
+
+
+    function showAuthMessage(
+        message,
+        isError
+    ) {
+
+        const element =
+            document.getElementById("authMessage");
+
+        element.textContent =
+            message;
+
+        element.className =
+            "message " +
+            (isError ? "error" : "success");
+
+        element.classList.remove("hidden");
+    }
+
+
+    function logout() {
+
+        token = "";
+
+        localStorage.removeItem(
+            "nl_sql_token"
+        );
+
+        location.reload();
+    }
+
+
+    /* =========================
+       API HELPER
+    ========================= */
+
+    async function apiFetch(
+        url,
+        options = {}
+    ) {
+
+        options.headers = {
+            ...(options.headers || {}),
+            Authorization: `Bearer ${token}`
+        };
+
+        const response =
+            await fetch(url, options);
+
+        if (response.status === 401) {
+
+            logout();
+
             throw new Error(
-                data.detail || "The query could not be processed."
+                "Your session has expired."
             );
         }
 
-        displayResults(data);
-
-        results.classList.remove("hidden");
-
-    } catch (err) {
-
-        error.textContent = err.message;
-        error.style.display = "block";
-
-    } finally {
-
-        runButton.disabled = false;
-        loading.style.display = "none";
-    }
-}
-
-
-function displayResults(data) {
-
-    document.getElementById("analysis").textContent =
-        data.analysis || "No analysis available.";
-
-    document.getElementById("sql").textContent =
-        data.sql || "";
-
-    renderVisualization(data.visualization);
-
-    renderTable(data.result);
-}
-
-
-function renderVisualization(visualization) {
-
-    const chart = document.getElementById("chart");
-
-    chart.innerHTML = "";
-
-    if (!visualization) {
-        return;
+        return response;
     }
 
-    if (visualization.type === "kpi") {
 
-        const value =
-            visualization.data &&
-            visualization.data.length > 0
-                ? visualization.data[0].value
-                : 0;
+    /* =========================
+       APP INIT
+    ========================= */
 
-        chart.innerHTML =
-            `<div class="kpi">${formatValue(value)}</div>`;
+    async function initializeApp() {
 
-        return;
-    }
+        try {
 
-    if (
-        visualization.type !== "bar" &&
-        visualization.type !== "line"
-    ) {
-        chart.innerHTML =
-            "<p>No visualization is recommended for this result.</p>";
+            const response =
+                await apiFetch("/auth/me");
 
-        return;
-    }
+            if (!response.ok) {
+                throw new Error(
+                    "Authentication failed."
+                );
+            }
 
-    const chartData = visualization.data || [];
+            currentUser =
+                await response.json();
 
-    const xValues = chartData.map(item => item.label);
-    const yValues = chartData.map(item => item.value);
+            document.getElementById(
+                "currentUser"
+            ).textContent =
+                `Signed in as ${currentUser.username}`;
 
-    const trace = {
-        x: xValues,
-        y: yValues,
-        type: visualization.type === "line"
-            ? "scatter"
-            : "bar",
-        mode: visualization.type === "line"
-            ? "lines+markers"
-            : undefined
-    };
+            document.getElementById(
+                "authScreen"
+            ).classList.add("hidden");
 
-    const layout = {
-        title: visualization.title || "Query Results",
-        margin: {
-            t: 60,
-            r: 30,
-            b: 100,
-            l: 70
-        },
-        xaxis: {
-            title: visualization.x_column || ""
-        },
-        yaxis: {
-            title: visualization.y_column || ""
-        },
-        responsive: true
-    };
+            document.getElementById(
+                "appScreen"
+            ).classList.remove("hidden");
 
-    Plotly.newPlot(
-        chart,
-        [trace],
-        layout,
-        {
-            responsive: true,
-            displayModeBar: false
+            await loadConnections();
+
+        } catch (error) {
+
+            localStorage.removeItem(
+                "nl_sql_token"
+            );
+
+            token = "";
+
+            showAuthMessage(
+                error.message,
+                true
+            );
         }
-    );
-}
+    }
 
 
-function renderTable(result) {
+    /* =========================
+       SECTIONS
+    ========================= */
 
-    const tableContainer =
-        document.getElementById("table");
-
-    tableContainer.innerHTML = "";
-
-    if (
-        !result ||
-        !result.columns ||
-        !result.rows
+    function showSection(
+        sectionId,
+        button
     ) {
-        return;
+
+        document
+            .querySelectorAll(".section-panel")
+            .forEach(section => {
+                section.classList.remove("active");
+            });
+
+        document
+            .getElementById(sectionId)
+            .classList.add("active");
+
+        document
+            .querySelectorAll(".sidebar-item")
+            .forEach(item => {
+                item.classList.remove("active");
+            });
+
+        if (button) {
+            button.classList.add("active");
+        }
     }
 
-    if (result.rows.length === 0) {
 
-        tableContainer.innerHTML =
-            "<p>No matching records found.</p>";
+    /* =========================
+       CONNECTIONS
+    ========================= */
 
-        return;
-    }
+    async function loadConnections() {
 
-    const table =
-        document.createElement("table");
+        const response =
+            await apiFetch("/database/connections");
 
-    const thead =
-        document.createElement("thead");
+        const data =
+            await response.json();
 
-    const headerRow =
-        document.createElement("tr");
+        if (!response.ok) {
+            throw new Error(
+                data.detail ||
+                "Failed to load connections."
+            );
+        }
 
-    result.columns.forEach(column => {
+        connections = data;
 
-        const th =
-            document.createElement("th");
+        const select =
+            document.getElementById(
+                "connectionSelect"
+            );
 
-        th.textContent = column;
+        select.innerHTML =
+            '<option value="">Select a database</option>';
 
-        headerRow.appendChild(th);
-    });
+        connections.forEach(connection => {
 
-    thead.appendChild(headerRow);
+            const option =
+                document.createElement("option");
 
-    const tbody =
-        document.createElement("tbody");
+            option.value =
+                connection.connection_id;
 
-    result.rows.forEach(row => {
+            option.textContent =
+                `${connection.name} — ${connection.database_name}`;
 
-        const tr =
-            document.createElement("tr");
-
-        result.columns.forEach(column => {
-
-            const td =
-                document.createElement("td");
-
-            td.textContent =
-                formatValue(row[column]);
-
-            tr.appendChild(td);
+            select.appendChild(option);
         });
 
-        tbody.appendChild(tr);
-    });
+        if (connections.length > 0) {
 
-    table.appendChild(thead);
-    table.appendChild(tbody);
+            const preferred =
+                currentConnectionId ||
+                connections[0].connection_id;
 
-    tableContainer.appendChild(table);
-}
+            select.value =
+                preferred;
 
+            currentConnectionId =
+                Number(preferred);
 
-function formatValue(value) {
+            updateConnectionInfo();
 
-    if (value === null || value === undefined) {
-        return "";
+        } else {
+
+            currentConnectionId = null;
+
+            updateConnectionInfo();
+        }
     }
 
-    if (
-        typeof value === "number" &&
-        Number.isFinite(value)
+
+    function connectionChanged() {
+
+        const value =
+            document.getElementById(
+                "connectionSelect"
+            ).value;
+
+        currentConnectionId =
+            value
+                ? Number(value)
+                : null;
+
+        currentConversationId = null;
+
+        updateConnectionInfo();
+    }
+
+
+    function getSelectedConnection() {
+
+        return connections.find(
+            connection =>
+                connection.connection_id
+                === currentConnectionId
+        );
+    }
+
+
+    function updateConnectionInfo() {
+
+        const element =
+            document.getElementById(
+                "connectionInfo"
+            );
+
+        const connection =
+            getSelectedConnection();
+
+        if (!connection) {
+
+            element.textContent =
+                "No database selected.";
+
+            return;
+        }
+
+        element.textContent =
+            `${connection.host}:${connection.port} / ${connection.database_name} / ${connection.username}`;
+    }
+
+
+    async function testSelectedConnection() {
+
+        if (!currentConnectionId) {
+
+            showQueryError(
+                "Select a database connection first."
+            );
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/database/connections/${currentConnectionId}/test`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    data.message ||
+                    "Connection test failed."
+                );
+            }
+
+            alert(
+                data.message ||
+                "Database connection successful."
+            );
+
+        } catch (error) {
+
+            showQueryError(
+                error.message
+            );
+        }
+    }
+
+
+    function openConnectionModal() {
+
+        document
+            .getElementById("connectionModal")
+            .classList.add("open");
+    }
+
+
+    function closeConnectionModal() {
+
+        document
+            .getElementById("connectionModal")
+            .classList.remove("open");
+    }
+
+
+    async function saveConnection() {
+
+        const payload = {
+            name:
+                document.getElementById("dbName").value.trim(),
+
+            db_type:
+                document.getElementById("dbType").value,
+
+            host:
+                document.getElementById("dbHost").value.trim(),
+
+            port:
+                Number(
+                    document.getElementById("dbPort").value
+                ),
+
+            database_name:
+                document
+                    .getElementById("dbDatabaseName")
+                    .value
+                    .trim(),
+
+            username:
+                document
+                    .getElementById("dbUsername")
+                    .value
+                    .trim(),
+
+            password:
+                document.getElementById("dbPassword").value
+        };
+
+        if (
+            !payload.name ||
+            !payload.host ||
+            !payload.database_name ||
+            !payload.username ||
+            !payload.password
+        ) {
+
+            showModalMessage(
+                "connectionModalMessage",
+                "All connection fields are required.",
+                true
+            );
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiFetch(
+                    "/database/connections",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Failed to save connection."
+                );
+            }
+
+            currentConnectionId =
+                data.connection_id;
+
+            closeConnectionModal();
+
+            await loadConnections();
+
+            document.getElementById(
+                "connectionSelect"
+            ).value =
+                currentConnectionId;
+
+            updateConnectionInfo();
+
+        } catch (error) {
+
+            showModalMessage(
+                "connectionModalMessage",
+                error.message,
+                true
+            );
+        }
+    }
+
+
+    /* =========================
+       QUERY
+    ========================= */
+
+    async function runQuery() {
+
+        const question =
+            document
+                .getElementById("question")
+                .value
+                .trim();
+
+        if (!question) {
+
+            showQueryError(
+                "Please enter a question."
+            );
+
+            return;
+        }
+
+        if (!currentConnectionId) {
+
+            showQueryError(
+                "Select a database connection first."
+            );
+
+            return;
+        }
+
+        const runButton =
+            document.getElementById("runButton");
+
+        const loading =
+            document.getElementById("loading");
+
+        const results =
+            document.getElementById(
+                "resultsContainer"
+            );
+
+        runButton.disabled = true;
+
+        loading.classList.remove("hidden");
+
+        results.classList.add("hidden");
+
+        hideQueryError();
+
+        try {
+
+            const payload = {
+                question: question,
+                connection_id: currentConnectionId
+            };
+
+            if (currentConversationId) {
+
+                payload.conversation_id =
+                    currentConversationId;
+            }
+
+            const response =
+                await apiFetch(
+                    "/query",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail ||
+                    "Query processing failed."
+                );
+            }
+
+            currentConversationId =
+                data.conversation_id;
+
+            displayResults(data);
+
+            results.classList.remove(
+                "hidden"
+            );
+
+        } catch (error) {
+
+            showQueryError(
+                error.message
+            );
+
+        } finally {
+
+            runButton.disabled = false;
+
+            loading.classList.add(
+                "hidden"
+            );
+        }
+    }
+
+
+    function displayResults(data) {
+
+        document.getElementById(
+            "analysis"
+        ).textContent =
+            data.analysis ||
+            "No analysis available.";
+
+        document.getElementById(
+            "sql"
+        ).textContent =
+            data.sql ||
+            "";
+
+        document.getElementById(
+            "queryMetadata"
+        ).textContent =
+            `History ID: ${data.history_id || "-"} · ` +
+            `Conversation ID: ${data.conversation_id || "-"} · ` +
+            `Execution time: ${data.execution_time_ms ?? "-"} ms`;
+
+        renderTable(
+            data.result
+        );
+    }
+
+
+    function renderTable(result) {
+
+        const container =
+            document.getElementById(
+                "resultTable"
+            );
+
+        container.innerHTML = "";
+
+        if (
+            !result ||
+            !result.columns ||
+            !result.rows
+        ) {
+
+            container.innerHTML =
+                '<div class="empty-state">No result data.</div>';
+
+            return;
+        }
+
+        if (result.rows.length === 0) {
+
+            container.innerHTML =
+                '<div class="empty-state">No matching records found.</div>';
+
+            return;
+        }
+
+        const table =
+            document.createElement("table");
+
+        const thead =
+            document.createElement("thead");
+
+        const headerRow =
+            document.createElement("tr");
+
+        result.columns.forEach(
+            column => {
+
+                const th =
+                    document.createElement("th");
+
+                th.textContent =
+                    column;
+
+                headerRow.appendChild(
+                    th
+                );
+            }
+        );
+
+        thead.appendChild(
+            headerRow
+        );
+
+        const tbody =
+            document.createElement("tbody");
+
+        result.rows.forEach(
+            row => {
+
+                const tr =
+                    document.createElement("tr");
+
+                result.columns.forEach(
+                    column => {
+
+                        const td =
+                            document.createElement("td");
+
+                        td.textContent =
+                            formatValue(
+                                row[column]
+                            );
+
+                        tr.appendChild(
+                            td
+                        );
+                    }
+                );
+
+                tbody.appendChild(
+                    tr
+                );
+            }
+        );
+
+        table.appendChild(
+            thead
+        );
+
+        table.appendChild(
+            tbody
+        );
+
+        container.appendChild(
+            table
+        );
+    }
+
+
+    function formatValue(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+            return "";
+        }
+
+        if (
+            typeof value === "number" &&
+            Number.isFinite(value)
+        ) {
+            return value.toLocaleString();
+        }
+
+        return String(value);
+    }
+
+
+    /* =========================
+       CONVERSATIONS
+    ========================= */
+
+    async function startNewConversation() {
+
+        if (!currentConnectionId) {
+
+            showQueryError(
+                "Select a database connection first."
+            );
+
+            return;
+        }
+
+        currentConversationId =
+            null;
+
+        document.getElementById(
+            "question"
+        ).value = "";
+
+        document.getElementById(
+            "resultsContainer"
+        ).classList.add(
+            "hidden"
+        );
+
+        showSection(
+            "querySection",
+            document.querySelector(
+                '.sidebar-item'
+            )
+        );
+    }
+
+
+    async function loadConversations() {
+
+        const container =
+            document.getElementById(
+                "conversationList"
+            );
+
+        container.innerHTML =
+            '<div class="empty-state">Loading...</div>';
+
+        try {
+
+            const response =
+                await apiFetch(
+                    "/conversations"
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Failed to load conversations."
+                );
+            }
+
+            if (data.length === 0) {
+
+                container.innerHTML =
+                    '<div class="empty-state">No conversations yet.</div>';
+
+                return;
+            }
+
+            container.innerHTML = "";
+
+            data.forEach(
+                conversation => {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+                    card.className =
+                        "list-card";
+
+                    card.innerHTML = `
+                        <div class="list-card-title">
+                            ${escapeHtml(conversation.title)}
+                        </div>
+
+                        <div class="list-card-meta">
+                            Connection #${conversation.connection_id}
+                            · Updated ${formatDate(conversation.updated_at)}
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <button
+                                class="secondary-button"
+                                onclick="openConversation(${conversation.conversation_id}, ${conversation.connection_id})"
+                            >
+                                Open
+                            </button>
+                        </div>
+                    `;
+
+                    container.appendChild(
+                        card
+                    );
+                }
+            );
+
+        } catch (error) {
+
+            container.innerHTML =
+                `<div class="message error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+
+    async function openConversation(
+        conversationId,
+        connectionId
     ) {
-        return value.toLocaleString();
+
+        currentConversationId =
+            conversationId;
+
+        currentConnectionId =
+            connectionId;
+
+        document.getElementById(
+            "connectionSelect"
+        ).value =
+            connectionId;
+
+        updateConnectionInfo();
+
+        showSection(
+            "querySection",
+            document.querySelector(
+                ".sidebar-item"
+            )
+        );
+
+        document.getElementById(
+            "resultsContainer"
+        ).classList.add(
+            "hidden"
+        );
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/conversations/${conversationId}/messages`
+                );
+
+            const messages =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    messages.detail ||
+                    "Failed to load conversation."
+                );
+            }
+
+            const lastAssistant =
+                [...messages]
+                    .reverse()
+                    .find(
+                        message =>
+                            message.role === "assistant"
+                    );
+
+            if (lastAssistant) {
+
+                let result = null;
+
+                try {
+                    result =
+                        JSON.parse(
+                            lastAssistant.content
+                        );
+                } catch {
+                    result = null;
+                }
+
+                const data = {
+                    sql:
+                        lastAssistant.sql_query || "",
+                    result:
+                        result || {
+                            columns: [],
+                            rows: [],
+                            row_count: 0
+                        }
+                };
+
+                document.getElementById(
+                    "sql"
+                ).textContent =
+                    data.sql;
+
+                renderTable(
+                    data.result
+                );
+
+                document.getElementById(
+                    "resultsContainer"
+                ).classList.remove(
+                    "hidden"
+                );
+            }
+
+        } catch (error) {
+
+            showQueryError(
+                error.message
+            );
+        }
     }
 
-    return String(value);
-}
 
+    /* =========================
+       HISTORY
+    ========================= */
+
+    async function loadHistory() {
+
+        const container =
+            document.getElementById(
+                "historyList"
+            );
+
+        container.innerHTML =
+            '<div class="empty-state">Loading...</div>';
+
+        try {
+
+            const response =
+                await apiFetch(
+                    "/history"
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Failed to load history."
+                );
+            }
+
+            if (data.length === 0) {
+
+                container.innerHTML =
+                    '<div class="empty-state">No query history yet.</div>';
+
+                return;
+            }
+
+            container.innerHTML = "";
+
+            data.forEach(
+                history => {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+                    card.className =
+                        "list-card";
+
+                    card.innerHTML = `
+                        <div class="list-card-title">
+                            ${escapeHtml(history.question)}
+                        </div>
+
+                        <div class="list-card-meta">
+                            History #${history.history_id}
+                            · Connection #${history.connection_id}
+                            · ${history.execution_time_ms ?? "-"} ms
+                            · ${formatDate(history.created_at)}
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <button
+                                class="secondary-button"
+                                onclick="viewHistory(${history.history_id})"
+                            >
+                                View
+                            </button>
+                        </div>
+                    `;
+
+                    container.appendChild(
+                        card
+                    );
+                }
+            );
+
+        } catch (error) {
+
+            container.innerHTML =
+                `<div class="message error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+
+    async function viewHistory(
+        historyId
+    ) {
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/history/${historyId}`
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Failed to load history."
+                );
+            }
+
+            currentConnectionId =
+                data.connection_id;
+
+            document.getElementById(
+                "connectionSelect"
+            ).value =
+                data.connection_id;
+
+            updateConnectionInfo();
+
+            document.getElementById(
+                "question"
+            ).value =
+                data.question;
+
+            document.getElementById(
+                "sql"
+            ).textContent =
+                data.sql_query;
+
+            let result = {
+                columns: [],
+                rows: [],
+                row_count: 0
+            };
+
+            try {
+                result =
+                    JSON.parse(
+                        data.result_summary
+                    );
+            } catch {
+                // Keep empty result.
+            }
+
+            renderTable(
+                result
+            );
+
+            document.getElementById(
+                "queryMetadata"
+            ).textContent =
+                `History ID: ${data.history_id} · ` +
+                `Execution time: ${data.execution_time_ms ?? "-"} ms`;
+
+            document.getElementById(
+                "resultsContainer"
+            ).classList.remove(
+                "hidden"
+            );
+
+            showSection(
+                "querySection",
+                document.querySelector(
+                    ".sidebar-item"
+                )
+            );
+
+        } catch (error) {
+
+            showQueryError(
+                error.message
+            );
+        }
+    }
+
+
+    /* =========================
+       BUSINESS RULES
+    ========================= */
+
+    async function loadBusinessRules() {
+
+        const container =
+            document.getElementById(
+                "rulesList"
+            );
+
+        if (!currentConnectionId) {
+
+            container.innerHTML =
+                '<div class="empty-state">Select a database connection first.</div>';
+
+            return;
+        }
+
+        container.innerHTML =
+            '<div class="empty-state">Loading...</div>';
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/business-rules?connection_id=${currentConnectionId}`
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Failed to load business rules."
+                );
+            }
+
+            if (data.length === 0) {
+
+                container.innerHTML =
+                    '<div class="empty-state">No business rules for this connection.</div>';
+
+                return;
+            }
+
+            container.innerHTML = "";
+
+            data.forEach(
+                rule => {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+                    card.className =
+                        "list-card";
+
+                    card.innerHTML = `
+                        <div class="list-card-title">
+                            ${escapeHtml(rule.title)}
+                        </div>
+
+                        <div class="list-card-meta">
+                            Tables: ${escapeHtml(rule.table_names.join(", "))}
+                        </div>
+
+                        <div class="rule-content">
+                            ${escapeHtml(rule.description)}
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <button
+                                class="danger-button"
+                                onclick="deleteBusinessRule(${rule.rule_id})"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    `;
+
+                    container.appendChild(
+                        card
+                    );
+                }
+            );
+
+        } catch (error) {
+
+            container.innerHTML =
+                `<div class="message error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+
+    function openRuleModal() {
+
+        if (!currentConnectionId) {
+
+            alert(
+                "Select a database connection first."
+            );
+
+            return;
+        }
+
+        document
+            .getElementById("ruleModal")
+            .classList.add("open");
+    }
+
+
+    function closeRuleModal() {
+
+        document
+            .getElementById("ruleModal")
+            .classList.remove("open");
+    }
+
+
+    async function saveBusinessRule() {
+
+        const payload = {
+            connection_id:
+                currentConnectionId,
+
+            title:
+                document
+                    .getElementById("ruleTitle")
+                    .value
+                    .trim(),
+
+            description:
+                document
+                    .getElementById("ruleDescription")
+                    .value
+                    .trim(),
+
+            table_names:
+                document
+                    .getElementById("ruleTables")
+                    .value
+                    .split(",")
+                    .map(value => value.trim())
+                    .filter(Boolean),
+
+            column_names:
+                document
+                    .getElementById("ruleColumns")
+                    .value
+                    .split(",")
+                    .map(value => value.trim())
+                    .filter(Boolean)
+        };
+
+        if (
+            !payload.title ||
+            !payload.description ||
+            payload.table_names.length === 0
+        ) {
+
+            showModalMessage(
+                "ruleModalMessage",
+                "Title, description and at least one table are required.",
+                true
+            );
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiFetch(
+                    "/business-rules",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    "Failed to save business rule."
+                );
+            }
+
+            closeRuleModal();
+
+            await loadBusinessRules();
+
+        } catch (error) {
+
+            showModalMessage(
+                "ruleModalMessage",
+                error.message,
+                true
+            );
+        }
+    }
+
+
+    async function deleteBusinessRule(
+        ruleId
+    ) {
+
+        if (
+            !confirm(
+                "Delete this business rule?"
+            )
+        ) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/business-rules/${ruleId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+            if (
+                !response.ok &&
+                response.status !== 204
+            ) {
+
+                const data =
+                    await response.json();
+
+                throw new Error(
+                    data.detail ||
+                    "Failed to delete business rule."
+                );
+            }
+
+            await loadBusinessRules();
+
+        } catch (error) {
+
+            alert(
+                error.message
+            );
+        }
+    }
+
+
+    /* =========================
+       UI HELPERS
+    ========================= */
+
+    function showQueryError(
+        message
+    ) {
+
+        const element =
+            document.getElementById(
+                "queryError"
+            );
+
+        element.textContent =
+            message;
+
+        element.classList.remove(
+            "hidden"
+        );
+    }
+
+
+    function hideQueryError() {
+
+        document
+            .getElementById("queryError")
+            .classList.add(
+                "hidden"
+            );
+    }
+
+
+    function showModalMessage(
+        elementId,
+        message,
+        isError
+    ) {
+
+        const element =
+            document.getElementById(
+                elementId
+            );
+
+        element.textContent =
+            message;
+
+        element.className =
+            "message " +
+            (isError ? "error" : "success");
+
+        element.classList.remove(
+            "hidden"
+        );
+    }
+
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+
+    function formatDate(value) {
+
+        if (!value) {
+            return "-";
+        }
+
+        const date =
+            new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return value;
+        }
+
+        return date.toLocaleString();
+    }
+
+
+    /* =========================
+       STARTUP
+    ========================= */
+
+    if (token) {
+        initializeApp();
+    }
 </script>
 
 </body>
