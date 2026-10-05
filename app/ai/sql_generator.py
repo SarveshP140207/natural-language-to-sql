@@ -1,5 +1,6 @@
 from app.ai.llm import generate_response
 from app.ai.prompts import build_sql_prompt
+from app.database.models import DatabaseConnection
 from app.database.introspector import get_database_schema
 from app.rag.retriever import retrieve_schema_context
 from app.validation.sql_cleaner import clean_sql_response
@@ -7,13 +8,17 @@ from app.validation.sql_cleaner import clean_sql_response
 
 def generate_sql(
     question: str,
-    conversation_context: str = ""
+    conversation_context: str = "",
+    database_connection: DatabaseConnection | None = None,
 ) -> str:
-    schema = get_database_schema()
+    schema = get_database_schema(
+        database_connection,
+    )
 
     retrieved_documents = retrieve_schema_context(
         question,
-        top_k=5
+        top_k=5,
+        database_connection=database_connection,
     )
 
     rag_context = "\n\n".join(
@@ -25,7 +30,7 @@ def generate_sql(
         schema=schema,
         question=question,
         rag_context=rag_context,
-        conversation_context=conversation_context
+        conversation_context=conversation_context,
     )
 
     response = generate_response(prompt)

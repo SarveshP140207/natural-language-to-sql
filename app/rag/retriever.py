@@ -1,9 +1,10 @@
 from rank_bm25 import BM25Okapi
 
+from app.database.models import DatabaseConnection
 from app.rag.documents import generate_schema_documents
 from app.rag.embeddings import get_embedding_model
 from app.rag.indexer import (
-    COLLECTION_NAME,
+    get_collection_name,
     get_qdrant_client,
 )
 from app.rag.reranker import rerank_results
@@ -11,7 +12,7 @@ from app.rag.reranker import rerank_results
 
 def reciprocal_rank_fusion(
     ranked_lists,
-    k=60
+    k=60,
 ):
     scores = {}
 
@@ -25,21 +26,22 @@ def reciprocal_rank_fusion(
     return sorted(
         scores,
         key=scores.get,
-        reverse=True
+        reverse=True,
     )
 
 
 def retrieve_schema_context(
     question: str,
-    top_k: int = 5
+    top_k: int = 5,
+    database_connection: DatabaseConnection | None = None,
 ):
     if not question or not question.strip():
         raise ValueError("Question cannot be empty.")
 
-    documents = generate_schema_documents()
+    documents = generate_schema_documents(
+        database_connection,
+    )
 
-    # Retrieve more candidates than the final number needed.
-    # The reranker will select the strongest results.
     candidate_k = max(top_k * 3, 10)
 
     # -------------------------
@@ -53,14 +55,18 @@ def retrieve_schema_context(
         [question]
     )[0].tolist()
 
+    collection_name = get_collection_name(
+        database_connection,
+    )
+
     vector_results = client.query_points(
-        collection_name=COLLECTION_NAME,
+        collection_name=collection_name,
         query=query_embedding,
         limit=candidate_k,
     )
 
     vector_ranked = [
-        result.payload["table"]
+        result.id
         for result in vector_results.points
     ]
 
@@ -77,16 +83,18 @@ def retrieve_schema_context(
 
     tokenized_query = question.lower().split()
 
-    bm25_scores = bm25.get_scores(tokenized_query)
+    bm25_scores = bm25.get_scores(
+        tokenized_query
+    )
 
     bm25_ranked_indexes = sorted(
         range(len(bm25_scores)),
         key=lambda index: bm25_scores[index],
-        reverse=True
+        reverse=True,
     )[:candidate_k]
 
     bm25_ranked = [
-        documents[index]["table"]
+        index
         for index in bm25_ranked_indexes
     ]
 
@@ -94,7 +102,7 @@ def retrieve_schema_context(
     # 3. Reciprocal Rank Fusion
     # -------------------------
 
-    fused_tables = reciprocal_rank_fusion(
+    fused_indexes = reciprocal_rank_fusion(
         [
             vector_ranked,
             bm25_ranked,
@@ -105,15 +113,16 @@ def retrieve_schema_context(
     # 4. Build fused documents
     # -------------------------
 
-    document_map = {
-        document["table"]: document
-        for document in documents
-    }
-
     fused_results = []
 
-    for table in fused_tables[:candidate_k]:
-        document = document_map[table]
+    for document_id in fused_indexes[:candidate_k]:
+        if not isinstance(document_id, int):
+            continue
+
+        if document_id >= len(documents):
+            continue
+
+        document = documents[document_id]
 
         fused_results.append({
             "score": 0,

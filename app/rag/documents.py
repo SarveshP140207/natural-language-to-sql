@@ -1,10 +1,13 @@
 from app.database.introspector import get_database_schema
+from app.database.models import DatabaseConnection
 from app.rag.business_rules import BUSINESS_RULES
 from app.rag.sql_examples import SQL_EXAMPLES
 
 
-def generate_schema_documents():
-    schema = get_database_schema()
+def generate_schema_documents(
+    database_connection: DatabaseConnection | None = None,
+):
+    schema = get_database_schema(database_connection)
 
     documents = []
 

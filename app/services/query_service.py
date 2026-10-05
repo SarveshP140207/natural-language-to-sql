@@ -58,8 +58,9 @@ def process_query(
     conversation_context = build_conversation_context()
 
     sql = generate_sql(
-        question=question,
-        conversation_context=conversation_context,
+    	question=question,
+   	conversation_context=conversation_context,
+  	database_connection=database_connection,
     )
 
     prepared_sql = validate_and_prepare_sql(sql)
