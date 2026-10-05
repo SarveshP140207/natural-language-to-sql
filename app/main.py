@@ -1,11 +1,14 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.auth import router as auth_router
 from app.api.database import router as database_router
 from app.api_schema import router as schema_router
+from app.core.dependencies import get_current_user
+from app.database.models import User
+from app.services.connection_service import get_user_connection
 from app.services.query_service import process_query
 
 
@@ -23,7 +26,8 @@ app.include_router(database_router)
 
 
 class QueryRequest(BaseModel):
-    question: str
+    question: str = Field(min_length=1)
+    connection_id: int = Field(gt=0)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -36,9 +40,26 @@ def home(request: Request):
 
 
 @app.post("/query")
-def query_database(request: QueryRequest):
+def query_database(
+    request: QueryRequest,
+    current_user: User = Depends(get_current_user),
+):
+    connection = get_user_connection(
+        user_id=current_user.user_id,
+        connection_id=request.connection_id,
+    )
+
+    if not connection:
+        raise HTTPException(
+            status_code=404,
+            detail="Database connection not found.",
+        )
+
     try:
-        return process_query(request.question)
+        return process_query(
+            question=request.question,
+            database_connection=connection,
+        )
 
     except ValueError as error:
         raise HTTPException(

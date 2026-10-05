@@ -3,6 +3,7 @@ from app.ai.sql_generator import generate_sql
 from app.ai.sql_repair import repair_sql
 from app.ai.visualization_analyzer import analyze_visualization
 from app.database.executor import execute_read_only_query
+from app.database.models import DatabaseConnection
 from app.services.conversation_service import conversation_state
 from app.validation.query_limits import apply_query_limit
 from app.validation.schema_validator import validate_generated_sql
@@ -47,7 +48,10 @@ def validate_and_prepare_sql(sql: str) -> str:
     return apply_query_limit(validated_sql)
 
 
-def process_query(question: str):
+def process_query(
+    question: str,
+    database_connection: DatabaseConnection | None = None,
+):
     if not question or not question.strip():
         raise ValueError("Question cannot be empty.")
 
@@ -55,30 +59,33 @@ def process_query(question: str):
 
     sql = generate_sql(
         question=question,
-        conversation_context=conversation_context
+        conversation_context=conversation_context,
     )
 
     prepared_sql = validate_and_prepare_sql(sql)
 
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         try:
-            result = execute_read_only_query(prepared_sql)
+            result = execute_read_only_query(
+                prepared_sql,
+                database_connection,
+            )
 
             analysis = analyze_result(
                 question=question,
                 sql=prepared_sql,
-                result=result
+                result=result,
             )
 
             visualization = analyze_visualization(
                 question=question,
-                result=result
+                result=result,
             )
 
             conversation_state.add_message(
                 question=question,
                 sql=prepared_sql,
-                result=result
+                result=result,
             )
 
             return {
@@ -86,7 +93,7 @@ def process_query(question: str):
                 "sql": prepared_sql,
                 "result": result,
                 "analysis": analysis,
-                "visualization": visualization
+                "visualization": visualization,
             }
 
         except Exception as error:
@@ -96,9 +103,9 @@ def process_query(question: str):
             repaired_sql = repair_sql(
                 question=question,
                 sql=prepared_sql,
-                error=str(error)
+                error=str(error),
             )
 
             prepared_sql = validate_and_prepare_sql(
-                repaired_sql
+                repaired_sql,
             )
