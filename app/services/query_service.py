@@ -6,38 +6,16 @@ from app.ai.sql_repair import repair_sql
 from app.ai.visualization_analyzer import analyze_visualization
 from app.database.executor import execute_read_only_query
 from app.database.models import DatabaseConnection
-from app.services.conversation_service import conversation_state
+from app.services.conversation_service import (
+    add_query_exchange,
+    build_conversation_context,
+)
 from app.validation.query_limits import apply_query_limit
 from app.validation.schema_validator import validate_generated_sql
 from app.validation.sql_parser import parse_sql
 
 
 MAX_REPAIR_ATTEMPTS = 2
-
-
-def build_conversation_context() -> str:
-    messages = conversation_state.get_recent_messages(limit=5)
-
-    if not messages:
-        return ""
-
-    context_parts = []
-
-    for index, message in enumerate(messages, start=1):
-        result = message["result"]
-
-        context_parts.append(
-            f"""Conversation {index}:
-Question: {message['question']}
-SQL: {message['sql']}
-Result row count: {result.get('row_count', 0)}
-Result columns: {result.get('columns', [])}
-Result rows:
-{result.get('rows', [])}
-"""
-        )
-
-    return "\n".join(context_parts)
 
 
 def validate_and_prepare_sql(sql: str) -> str:
@@ -53,11 +31,25 @@ def validate_and_prepare_sql(sql: str) -> str:
 def process_query(
     question: str,
     database_connection: DatabaseConnection | None = None,
+    user_id: int | None = None,
+    conversation_id: int | None = None,
 ):
     if not question or not question.strip():
         raise ValueError("Question cannot be empty.")
 
-    conversation_context = build_conversation_context()
+    conversation_context = ""
+
+    if conversation_id is not None:
+        if user_id is None:
+            raise ValueError(
+                "User ID is required when using a conversation."
+            )
+
+        conversation_context = build_conversation_context(
+            user_id=user_id,
+            conversation_id=conversation_id,
+            limit=5,
+        )
 
     sql = generate_sql(
         question=question,
@@ -91,11 +83,17 @@ def process_query(
                 result=result,
             )
 
-            conversation_state.add_message(
-                question=question,
-                sql=prepared_sql,
-                result=result,
-            )
+            if (
+                user_id is not None
+                and conversation_id is not None
+                and database_connection is not None
+            ):
+                add_query_exchange(
+                    conversation_id=conversation_id,
+                    question=question,
+                    sql=prepared_sql,
+                    result=result,
+                )
 
             return {
                 "question": question,

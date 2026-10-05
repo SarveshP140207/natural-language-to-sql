@@ -10,6 +10,10 @@ from app.api_schema import router as schema_router
 from app.core.dependencies import get_current_user
 from app.database.models import User
 from app.services.connection_service import get_user_connection
+from app.services.conversation_service import (
+    create_conversation,
+    get_user_conversation,
+)
 from app.services.history_service import save_query_history
 from app.services.query_service import process_query
 
@@ -31,6 +35,7 @@ app.include_router(history_router)
 class QueryRequest(BaseModel):
     question: str = Field(min_length=1)
     connection_id: int = Field(gt=0)
+    conversation_id: int | None = Field(default=None, gt=0)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -58,10 +63,37 @@ def query_database(
             detail="Database connection not found.",
         )
 
+    if request.conversation_id is not None:
+        conversation = get_user_conversation(
+            user_id=current_user.user_id,
+            conversation_id=request.conversation_id,
+        )
+
+        if not conversation:
+            raise HTTPException(
+                status_code=404,
+                detail="Conversation not found.",
+            )
+
+        if conversation.connection_id != connection.connection_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Conversation belongs to a different database connection.",
+            )
+
+    else:
+        conversation = create_conversation(
+            user_id=current_user.user_id,
+            connection_id=connection.connection_id,
+            title=request.question[:255],
+        )
+
     try:
         result = process_query(
             question=request.question,
             database_connection=connection,
+            user_id=current_user.user_id,
+            conversation_id=conversation.conversation_id,
         )
 
         history = save_query_history(
@@ -74,6 +106,7 @@ def query_database(
         )
 
         result["history_id"] = history.history_id
+        result["conversation_id"] = conversation.conversation_id
 
         return result
 
