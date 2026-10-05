@@ -1,4 +1,5 @@
 from app.database.introspector import get_database_schema
+from app.rag.business_rules import BUSINESS_RULES
 
 
 def generate_schema_documents():
@@ -49,6 +50,18 @@ def generate_schema_documents():
             "type": "schema",
             "table": table["name"],
             "content": "\n".join(lines)
+        })
+
+    for rule in BUSINESS_RULES:
+        documents.append({
+            "type": "business_rule",
+            "table": ", ".join(rule["tables"]),
+            "content": (
+                f"BUSINESS RULE: {rule['title']}\n\n"
+                f"{rule['description']}\n\n"
+                f"RELATED TABLES: {', '.join(rule['tables'])}\n"
+                f"RELATED COLUMNS: {', '.join(rule['columns'])}"
+            )
         })
 
     return documents
