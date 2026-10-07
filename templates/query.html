@@ -281,6 +281,8 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         /* =========================
@@ -428,7 +430,7 @@
         }
 
         /* =========================
-           SIDEBAR CONTENT
+           LISTS
         ========================= */
 
         .section-panel {
@@ -468,7 +470,7 @@
         }
 
         /* =========================
-           MODAL
+           MODALS
         ========================= */
 
         .modal-overlay {
@@ -536,6 +538,16 @@
             .result-grid {
                 grid-template-columns: 1fr;
             }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .topbar-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
         }
     </style>
 </head>
@@ -560,30 +572,54 @@
 
             <div class="form-group">
                 <label for="registerEmail">Email</label>
-                <input id="registerEmail" type="email">
+                <input
+                    id="registerEmail"
+                    type="email"
+                    autocomplete="email"
+                >
             </div>
 
         </div>
 
         <div class="form-group">
             <label for="authUsername">Username</label>
-            <input id="authUsername" type="text" autocomplete="username">
+            <input
+                id="authUsername"
+                type="text"
+                autocomplete="username"
+            >
         </div>
 
         <div class="form-group">
             <label for="authPassword">Password</label>
-            <input id="authPassword" type="password" autocomplete="current-password">
+            <input
+                id="authPassword"
+                type="password"
+                autocomplete="current-password"
+            >
         </div>
 
-        <button id="authButton" class="primary-button" onclick="submitAuth()">
+        <button
+            id="authButton"
+            class="primary-button"
+            onclick="submitAuth()"
+        >
             Sign In
         </button>
 
-        <div id="authMessage" class="hidden"></div>
+        <div
+            id="authMessage"
+            class="hidden"
+        ></div>
 
         <div class="auth-switch">
-            <span id="authSwitchText">Don't have an account?</span>
-            <button onclick="toggleAuthMode()">Create one</button>
+            <span id="authSwitchText">
+                Don't have an account?
+            </span>
+
+            <button onclick="toggleAuthMode()">
+                Create one
+            </button>
         </div>
 
     </div>
@@ -600,9 +636,13 @@
     <aside class="sidebar">
 
         <div class="brand">
+
             <h2>Natural Language to SQL</h2>
+
             <p>Database assistant</p>
+
         </div>
+
 
         <div class="sidebar-section">
 
@@ -644,6 +684,7 @@
 
         </div>
 
+
         <div class="sidebar-section">
 
             <div class="sidebar-section-title">
@@ -663,9 +704,13 @@
 
         </div>
 
+
         <div class="sidebar-footer">
 
-            <div id="currentUser" class="user-name"></div>
+            <div
+                id="currentUser"
+                class="user-name"
+            ></div>
 
             <button
                 class="logout-button"
@@ -693,6 +738,7 @@
 
             </div>
 
+
             <div class="topbar-actions">
 
                 <button
@@ -700,6 +746,13 @@
                     onclick="testSelectedConnection()"
                 >
                     Test Connection
+                </button>
+
+                <button
+                    class="secondary-button"
+                    onclick="syncSelectedSchema()"
+                >
+                    Sync Schema
                 </button>
 
                 <button
@@ -718,13 +771,19 @@
              QUERY
         ========================= -->
 
-        <section id="querySection" class="section-panel active">
+        <section
+            id="querySection"
+            class="section-panel active"
+        >
 
             <div class="card">
 
                 <div class="card-header">
+
                     <h2>Database Connection</h2>
+
                 </div>
+
 
                 <div class="connection-row">
 
@@ -746,6 +805,7 @@
 
                 </div>
 
+
                 <div
                     id="connectionInfo"
                     class="connection-info"
@@ -759,14 +819,18 @@
             <div class="card">
 
                 <div class="card-header">
+
                     <h2>Ask a Question</h2>
+
                 </div>
+
 
                 <textarea
                     id="question"
                     class="query-input"
                     placeholder="Example: Which category has the most products?"
                 ></textarea>
+
 
                 <div class="query-actions">
 
@@ -780,12 +844,14 @@
 
                 </div>
 
+
                 <div
                     id="loading"
                     class="loading hidden"
                 >
                     Processing your question...
                 </div>
+
 
                 <div
                     id="queryError"
@@ -795,14 +861,19 @@
             </div>
 
 
-            <div id="resultsContainer" class="hidden">
+            <div
+                id="resultsContainer"
+                class="hidden"
+            >
 
                 <div class="result-grid">
 
                     <div class="card">
 
                         <div class="card-header">
+
                             <h2>Answer</h2>
+
                         </div>
 
                         <div
@@ -823,11 +894,15 @@
                     <div class="card">
 
                         <div class="card-header">
+
                             <h2>Generated SQL</h2>
+
                         </div>
 
                         <div class="sql-box">
+
                             <pre id="sql"></pre>
+
                         </div>
 
                     </div>
@@ -838,7 +913,9 @@
                 <div class="card">
 
                     <div class="card-header">
+
                         <h2>Query Results</h2>
+
                     </div>
 
                     <div
@@ -857,18 +934,24 @@
              HISTORY
         ========================= -->
 
-        <section id="historySection" class="section-panel">
+        <section
+            id="historySection"
+            class="section-panel"
+        >
 
             <div class="card">
 
                 <div class="card-header">
+
                     <h2>Query History</h2>
+
                     <button
                         class="secondary-button"
                         onclick="loadHistory()"
                     >
                         Refresh
                     </button>
+
                 </div>
 
                 <div id="historyList"></div>
@@ -882,7 +965,10 @@
              CONVERSATIONS
         ========================= -->
 
-        <section id="conversationSection" class="section-panel">
+        <section
+            id="conversationSection"
+            class="section-panel"
+        >
 
             <div class="card">
 
@@ -910,7 +996,10 @@
              BUSINESS RULES
         ========================= -->
 
-        <section id="rulesSection" class="section-panel">
+        <section
+            id="rulesSection"
+            class="section-panel"
+        >
 
             <div class="card">
 
@@ -942,7 +1031,10 @@
      CONNECTION MODAL
 ========================= -->
 
-<div id="connectionModal" class="modal-overlay">
+<div
+    id="connectionModal"
+    class="modal-overlay"
+>
 
     <div class="modal">
 
@@ -959,44 +1051,93 @@
 
         </div>
 
+
         <div class="form-group">
             <label>Name</label>
-            <input id="dbName" type="text" placeholder="Ecommerce Local">
+            <input
+                id="dbName"
+                type="text"
+                placeholder="Ecommerce Local"
+            >
         </div>
+
 
         <div class="form-group">
             <label>Database Type</label>
+
             <select id="dbType">
-                <option value="mysql">MySQL</option>
+
+                <option value="mysql">
+                    MySQL
+                </option>
+
             </select>
+
         </div>
+
 
         <div class="form-group">
             <label>Host</label>
-            <input id="dbHost" type="text" value="localhost">
+
+            <input
+                id="dbHost"
+                type="text"
+                value="localhost"
+            >
+
         </div>
+
 
         <div class="form-group">
             <label>Port</label>
-            <input id="dbPort" type="number" value="3306">
+
+            <input
+                id="dbPort"
+                type="number"
+                value="3306"
+            >
+
         </div>
+
 
         <div class="form-group">
             <label>Database Name</label>
-            <input id="dbDatabaseName" type="text">
+
+            <input
+                id="dbDatabaseName"
+                type="text"
+            >
+
         </div>
+
 
         <div class="form-group">
             <label>Username</label>
-            <input id="dbUsername" type="text">
+
+            <input
+                id="dbUsername"
+                type="text"
+            >
+
         </div>
+
 
         <div class="form-group">
             <label>Password</label>
-            <input id="dbPassword" type="password">
+
+            <input
+                id="dbPassword"
+                type="password"
+            >
+
         </div>
 
-        <div id="connectionModalMessage" class="hidden"></div>
+
+        <div
+            id="connectionModalMessage"
+            class="hidden"
+        ></div>
+
 
         <div class="modal-actions">
 
@@ -1026,7 +1167,10 @@
      BUSINESS RULE MODAL
 ========================= -->
 
-<div id="ruleModal" class="modal-overlay">
+<div
+    id="ruleModal"
+    class="modal-overlay"
+>
 
     <div class="modal">
 
@@ -1043,39 +1187,63 @@
 
         </div>
 
-        <div class="form-group">
-            <label>Title</label>
-            <input id="ruleTitle" type="text">
-        </div>
 
         <div class="form-group">
+
+            <label>Title</label>
+
+            <input
+                id="ruleTitle"
+                type="text"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
             <label>Description</label>
+
             <textarea
                 id="ruleDescription"
                 class="query-input"
                 style="min-height:100px;"
             ></textarea>
+
         </div>
 
+
         <div class="form-group">
+
             <label>Table Names</label>
+
             <input
                 id="ruleTables"
                 type="text"
                 placeholder="orders, payments"
             >
+
         </div>
 
+
         <div class="form-group">
+
             <label>Column Names</label>
+
             <input
                 id="ruleColumns"
                 type="text"
                 placeholder="status, total_amount"
             >
+
         </div>
 
-        <div id="ruleModalMessage" class="hidden"></div>
+
+        <div
+            id="ruleModalMessage"
+            class="hidden"
+        ></div>
+
 
         <div class="modal-actions">
 
@@ -1122,20 +1290,30 @@
                 : "login";
 
         const registerFields =
-            document.getElementById("registerFields");
+            document.getElementById(
+                "registerFields"
+            );
 
         const authButton =
-            document.getElementById("authButton");
+            document.getElementById(
+                "authButton"
+            );
 
         const authSubtitle =
-            document.getElementById("authSubtitle");
+            document.getElementById(
+                "authSubtitle"
+            );
 
         const authSwitchText =
-            document.getElementById("authSwitchText");
+            document.getElementById(
+                "authSwitchText"
+            );
 
         if (authMode === "register") {
 
-            registerFields.classList.remove("hidden");
+            registerFields.classList.remove(
+                "hidden"
+            );
 
             authButton.textContent =
                 "Create Account";
@@ -1148,7 +1326,9 @@
 
         } else {
 
-            registerFields.classList.add("hidden");
+            registerFields.classList.add(
+                "hidden"
+            );
 
             authButton.textContent =
                 "Sign In";
@@ -1165,19 +1345,29 @@
     async function submitAuth() {
 
         const username =
-            document.getElementById("authUsername").value.trim();
+            document
+                .getElementById("authUsername")
+                .value
+                .trim();
 
         const password =
-            document.getElementById("authPassword").value;
+            document.getElementById(
+                "authPassword"
+            ).value;
 
         const email =
-            document.getElementById("registerEmail").value.trim();
+            document
+                .getElementById("registerEmail")
+                .value
+                .trim();
 
         if (!username || !password) {
+
             showAuthMessage(
                 "Username and password are required.",
                 true
             );
+
             return;
         }
 
@@ -1186,30 +1376,36 @@
             if (authMode === "register") {
 
                 if (!email) {
+
                     showAuthMessage(
                         "Email is required.",
                         true
                     );
+
                     return;
                 }
 
                 const registerResponse =
-                    await fetch("/auth/register", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            username: username,
-                            email: email,
-                            password: password
-                        })
-                    });
+                    await fetch(
+                        "/auth/register",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                username: username,
+                                email: email,
+                                password: password
+                            })
+                        }
+                    );
 
                 const registerData =
                     await registerResponse.json();
 
                 if (!registerResponse.ok) {
+
                     throw new Error(
                         registerData.detail ||
                         "Registration failed."
@@ -1222,12 +1418,28 @@
                 );
 
                 authMode = "login";
-                toggleAuthMode();
 
-                document.getElementById("authUsername").value =
+                registerFields.classList.add(
+                    "hidden"
+                );
+
+                authButton.textContent =
+                    "Sign In";
+
+                authSubtitle.textContent =
+                    "Sign in to query your connected databases.";
+
+                authSwitchText.textContent =
+                    "Don't have an account?";
+
+                document.getElementById(
+                    "authUsername"
+                ).value =
                     username;
 
-                document.getElementById("authPassword").value =
+                document.getElementById(
+                    "authPassword"
+                ).value =
                     "";
 
                 return;
@@ -1235,28 +1447,33 @@
 
 
             const response =
-                await fetch("/auth/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
+                await fetch(
+                    "/auth/login",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    }
+                );
 
             const data =
                 await response.json();
 
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Login failed."
                 );
             }
 
-            token = data.access_token;
+            token =
+                data.access_token;
 
             localStorage.setItem(
                 "nl_sql_token",
@@ -1281,16 +1498,24 @@
     ) {
 
         const element =
-            document.getElementById("authMessage");
+            document.getElementById(
+                "authMessage"
+            );
 
         element.textContent =
             message;
 
         element.className =
             "message " +
-            (isError ? "error" : "success");
+            (
+                isError
+                    ? "error"
+                    : "success"
+            );
 
-        element.classList.remove("hidden");
+        element.classList.remove(
+            "hidden"
+        );
     }
 
 
@@ -1317,11 +1542,15 @@
 
         options.headers = {
             ...(options.headers || {}),
-            Authorization: `Bearer ${token}`
+            Authorization:
+                `Bearer ${token}`
         };
 
         const response =
-            await fetch(url, options);
+            await fetch(
+                url,
+                options
+            );
 
         if (response.status === 401) {
 
@@ -1345,9 +1574,12 @@
         try {
 
             const response =
-                await apiFetch("/auth/me");
+                await apiFetch(
+                    "/auth/me"
+                );
 
             if (!response.ok) {
+
                 throw new Error(
                     "Authentication failed."
                 );
@@ -1363,11 +1595,15 @@
 
             document.getElementById(
                 "authScreen"
-            ).classList.add("hidden");
+            ).classList.add(
+                "hidden"
+            );
 
             document.getElementById(
                 "appScreen"
-            ).classList.remove("hidden");
+            ).classList.remove(
+                "hidden"
+            );
 
             await loadConnections();
 
@@ -1397,23 +1633,39 @@
     ) {
 
         document
-            .querySelectorAll(".section-panel")
-            .forEach(section => {
-                section.classList.remove("active");
-            });
+            .querySelectorAll(
+                ".section-panel"
+            )
+            .forEach(
+                section => {
+                    section.classList.remove(
+                        "active"
+                    );
+                }
+            );
 
         document
             .getElementById(sectionId)
-            .classList.add("active");
+            .classList.add(
+                "active"
+            );
 
         document
-            .querySelectorAll(".sidebar-item")
-            .forEach(item => {
-                item.classList.remove("active");
-            });
+            .querySelectorAll(
+                ".sidebar-item"
+            )
+            .forEach(
+                item => {
+                    item.classList.remove(
+                        "active"
+                    );
+                }
+            );
 
         if (button) {
-            button.classList.add("active");
+            button.classList.add(
+                "active"
+            );
         }
     }
 
@@ -1425,19 +1677,23 @@
     async function loadConnections() {
 
         const response =
-            await apiFetch("/database/connections");
+            await apiFetch(
+                "/database/connections"
+            );
 
         const data =
             await response.json();
 
         if (!response.ok) {
+
             throw new Error(
                 data.detail ||
                 "Failed to load connections."
             );
         }
 
-        connections = data;
+        connections =
+            data;
 
         const select =
             document.getElementById(
@@ -1447,19 +1703,25 @@
         select.innerHTML =
             '<option value="">Select a database</option>';
 
-        connections.forEach(connection => {
+        connections.forEach(
+            connection => {
 
-            const option =
-                document.createElement("option");
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
-            option.value =
-                connection.connection_id;
+                option.value =
+                    connection.connection_id;
 
-            option.textContent =
-                `${connection.name} — ${connection.database_name}`;
+                option.textContent =
+                    `${connection.name} — ${connection.database_name}`;
 
-            select.appendChild(option);
-        });
+                select.appendChild(
+                    option
+                );
+            }
+        );
 
         if (connections.length > 0) {
 
@@ -1560,6 +1822,7 @@
                 await response.json();
 
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     data.message ||
@@ -1581,54 +1844,147 @@
     }
 
 
+    async function syncSelectedSchema() {
+
+        if (!currentConnectionId) {
+
+            showQueryError(
+                "Select a database connection first."
+            );
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/database/connections/${currentConnectionId}/schema/sync`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail ||
+                    "Schema synchronization failed."
+                );
+            }
+
+            if (data.changed) {
+
+                alert(
+                    `Schema changed.\n\n` +
+                    `New version: ${data.schema_version_id}\n` +
+                    `Indexed documents: ${data.indexed_documents}`
+                );
+
+            } else {
+
+                alert(
+                    "Schema unchanged.\n\n" +
+                    "The existing RAG index is already current."
+                );
+            }
+
+        } catch (error) {
+
+            showQueryError(
+                error.message
+            );
+        }
+    }
+
+
     function openConnectionModal() {
 
         document
-            .getElementById("connectionModal")
-            .classList.add("open");
+            .getElementById(
+                "connectionModal"
+            )
+            .classList.add(
+                "open"
+            );
     }
 
 
     function closeConnectionModal() {
 
         document
-            .getElementById("connectionModal")
-            .classList.remove("open");
+            .getElementById(
+                "connectionModal"
+            )
+            .classList.remove(
+                "open"
+            );
     }
 
 
     async function saveConnection() {
 
         const payload = {
+
             name:
-                document.getElementById("dbName").value.trim(),
+                document
+                    .getElementById(
+                        "dbName"
+                    )
+                    .value
+                    .trim(),
 
             db_type:
-                document.getElementById("dbType").value,
+                document
+                    .getElementById(
+                        "dbType"
+                    )
+                    .value,
 
             host:
-                document.getElementById("dbHost").value.trim(),
+                document
+                    .getElementById(
+                        "dbHost"
+                    )
+                    .value
+                    .trim(),
 
             port:
                 Number(
-                    document.getElementById("dbPort").value
+                    document
+                        .getElementById(
+                            "dbPort"
+                        )
+                        .value
                 ),
 
             database_name:
                 document
-                    .getElementById("dbDatabaseName")
+                    .getElementById(
+                        "dbDatabaseName"
+                    )
                     .value
                     .trim(),
 
             username:
                 document
-                    .getElementById("dbUsername")
+                    .getElementById(
+                        "dbUsername"
+                    )
                     .value
                     .trim(),
 
             password:
-                document.getElementById("dbPassword").value
+                document
+                    .getElementById(
+                        "dbPassword"
+                    )
+                    .value
         };
+
 
         if (
             !payload.name ||
@@ -1647,6 +2003,7 @@
             return;
         }
 
+
         try {
 
             const response =
@@ -1655,9 +2012,13 @@
                     {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json"
+                            "Content-Type":
+                                "application/json"
                         },
-                        body: JSON.stringify(payload)
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
                     }
                 );
 
@@ -1665,6 +2026,7 @@
                 await response.json();
 
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Failed to save connection."
@@ -1704,7 +2066,9 @@
 
         const question =
             document
-                .getElementById("question")
+                .getElementById(
+                    "question"
+                )
                 .value
                 .trim();
 
@@ -1727,10 +2091,14 @@
         }
 
         const runButton =
-            document.getElementById("runButton");
+            document.getElementById(
+                "runButton"
+            );
 
         const loading =
-            document.getElementById("loading");
+            document.getElementById(
+                "loading"
+            );
 
         const results =
             document.getElementById(
@@ -1739,18 +2107,27 @@
 
         runButton.disabled = true;
 
-        loading.classList.remove("hidden");
+        loading.classList.remove(
+            "hidden"
+        );
 
-        results.classList.add("hidden");
+        results.classList.add(
+            "hidden"
+        );
 
         hideQueryError();
 
         try {
 
             const payload = {
-                question: question,
-                connection_id: currentConnectionId
+
+                question:
+                    question,
+
+                connection_id:
+                    currentConnectionId
             };
+
 
             if (currentConversationId) {
 
@@ -1758,20 +2135,27 @@
                     currentConversationId;
             }
 
+
             const response =
                 await apiFetch(
                     "/query",
                     {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json"
+                            "Content-Type":
+                                "application/json"
                         },
-                        body: JSON.stringify(payload)
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
                     }
                 );
 
+
             const data =
                 await response.json();
+
 
             if (!response.ok) {
 
@@ -1781,10 +2165,15 @@
                 );
             }
 
+
             currentConversationId =
                 data.conversation_id;
 
-            displayResults(data);
+
+            displayResults(
+                data
+            );
+
 
             results.classList.remove(
                 "hidden"
@@ -1807,7 +2196,9 @@
     }
 
 
-    function displayResults(data) {
+    function displayResults(
+        data
+    ) {
 
         document.getElementById(
             "analysis"
@@ -1834,7 +2225,9 @@
     }
 
 
-    function renderTable(result) {
+    function renderTable(
+        result
+    ) {
 
         const container =
             document.getElementById(
@@ -1842,6 +2235,7 @@
             );
 
         container.innerHTML = "";
+
 
         if (
             !result ||
@@ -1855,6 +2249,7 @@
             return;
         }
 
+
         if (result.rows.length === 0) {
 
             container.innerHTML =
@@ -1863,20 +2258,30 @@
             return;
         }
 
+
         const table =
-            document.createElement("table");
+            document.createElement(
+                "table"
+            );
 
         const thead =
-            document.createElement("thead");
+            document.createElement(
+                "thead"
+            );
 
         const headerRow =
-            document.createElement("tr");
+            document.createElement(
+                "tr"
+            );
+
 
         result.columns.forEach(
             column => {
 
                 const th =
-                    document.createElement("th");
+                    document.createElement(
+                        "th"
+                    );
 
                 th.textContent =
                     column;
@@ -1887,24 +2292,34 @@
             }
         );
 
+
         thead.appendChild(
             headerRow
         );
 
+
         const tbody =
-            document.createElement("tbody");
+            document.createElement(
+                "tbody"
+            );
+
 
         result.rows.forEach(
             row => {
 
                 const tr =
-                    document.createElement("tr");
+                    document.createElement(
+                        "tr"
+                    );
+
 
                 result.columns.forEach(
                     column => {
 
                         const td =
-                            document.createElement("td");
+                            document.createElement(
+                                "td"
+                            );
 
                         td.textContent =
                             formatValue(
@@ -1917,11 +2332,13 @@
                     }
                 );
 
+
                 tbody.appendChild(
                     tr
                 );
             }
         );
+
 
         table.appendChild(
             thead
@@ -1937,7 +2354,9 @@
     }
 
 
-    function formatValue(value) {
+    function formatValue(
+        value
+    ) {
 
         if (
             value === null ||
@@ -1946,12 +2365,15 @@
             return "";
         }
 
+
         if (
             typeof value === "number" &&
             Number.isFinite(value)
         ) {
+
             return value.toLocaleString();
         }
+
 
         return String(value);
     }
@@ -1988,7 +2410,7 @@
         showSection(
             "querySection",
             document.querySelector(
-                '.sidebar-item'
+                ".sidebar-item"
             )
         );
     }
@@ -2015,11 +2437,13 @@
                 await response.json();
 
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Failed to load conversations."
                 );
             }
+
 
             if (data.length === 0) {
 
@@ -2029,7 +2453,9 @@
                 return;
             }
 
+
             container.innerHTML = "";
+
 
             data.forEach(
                 conversation => {
@@ -2052,12 +2478,19 @@
                             · Updated ${formatDate(conversation.updated_at)}
                         </div>
 
-                        <div style="margin-top:10px;">
+                        <div style="margin-top:10px; display:flex; gap:8px;">
                             <button
                                 class="secondary-button"
                                 onclick="openConversation(${conversation.conversation_id}, ${conversation.connection_id})"
                             >
                                 Open
+                            </button>
+
+                            <button
+                                class="danger-button"
+                                onclick="deleteConversation(${conversation.conversation_id})"
+                            >
+                                Delete
                             </button>
                         </div>
                     `;
@@ -2087,12 +2520,14 @@
         currentConnectionId =
             connectionId;
 
+
         document.getElementById(
             "connectionSelect"
         ).value =
             connectionId;
 
         updateConnectionInfo();
+
 
         showSection(
             "querySection",
@@ -2101,11 +2536,13 @@
             )
         );
 
+
         document.getElementById(
             "resultsContainer"
         ).classList.add(
             "hidden"
         );
+
 
         try {
 
@@ -2117,12 +2554,15 @@
             const messages =
                 await response.json();
 
+
             if (!response.ok) {
+
                 throw new Error(
                     messages.detail ||
                     "Failed to load conversation."
                 );
             }
+
 
             const lastAssistant =
                 [...messages]
@@ -2132,38 +2572,50 @@
                             message.role === "assistant"
                     );
 
+
             if (lastAssistant) {
 
                 let result = null;
 
                 try {
+
                     result =
                         JSON.parse(
                             lastAssistant.content
                         );
+
                 } catch {
+
                     result = null;
                 }
 
+
                 const data = {
+
                     sql:
-                        lastAssistant.sql_query || "",
+                        lastAssistant.sql_query ||
+                        "",
+
                     result:
-                        result || {
+                        result ||
+                        {
                             columns: [],
                             rows: [],
                             row_count: 0
                         }
                 };
 
+
                 document.getElementById(
                     "sql"
                 ).textContent =
                     data.sql;
 
+
                 renderTable(
                     data.result
                 );
+
 
                 document.getElementById(
                     "resultsContainer"
@@ -2175,6 +2627,66 @@
         } catch (error) {
 
             showQueryError(
+                error.message
+            );
+        }
+    }
+
+
+    async function deleteConversation(
+        conversationId
+    ) {
+
+        if (
+            !confirm(
+                "Delete this conversation?"
+            )
+        ) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await apiFetch(
+                    `/conversations/${conversationId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+            if (
+                !response.ok &&
+                response.status !== 204
+            ) {
+
+                const data =
+                    await response.json();
+
+                throw new Error(
+                    data.detail ||
+                    "Failed to delete conversation."
+                );
+            }
+
+
+            if (
+                currentConversationId
+                === conversationId
+            ) {
+
+                currentConversationId =
+                    null;
+            }
+
+
+            await loadConversations();
+
+        } catch (error) {
+
+            alert(
                 error.message
             );
         }
@@ -2195,6 +2707,7 @@
         container.innerHTML =
             '<div class="empty-state">Loading...</div>';
 
+
         try {
 
             const response =
@@ -2205,12 +2718,15 @@
             const data =
                 await response.json();
 
+
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Failed to load history."
                 );
             }
+
 
             if (data.length === 0) {
 
@@ -2220,7 +2736,9 @@
                 return;
             }
 
+
             container.innerHTML = "";
+
 
             data.forEach(
                 history => {
@@ -2232,6 +2750,7 @@
 
                     card.className =
                         "list-card";
+
 
                     card.innerHTML = `
                         <div class="list-card-title">
@@ -2254,6 +2773,7 @@
                             </button>
                         </div>
                     `;
+
 
                     container.appendChild(
                         card
@@ -2283,32 +2803,40 @@
             const data =
                 await response.json();
 
+
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Failed to load history."
                 );
             }
 
+
             currentConnectionId =
                 data.connection_id;
+
 
             document.getElementById(
                 "connectionSelect"
             ).value =
                 data.connection_id;
 
+
             updateConnectionInfo();
+
 
             document.getElementById(
                 "question"
             ).value =
                 data.question;
 
+
             document.getElementById(
                 "sql"
             ).textContent =
                 data.sql_query;
+
 
             let result = {
                 columns: [],
@@ -2316,18 +2844,28 @@
                 row_count: 0
             };
 
+
             try {
+
                 result =
                     JSON.parse(
                         data.result_summary
                     );
+
             } catch {
-                // Keep empty result.
+
+                result = {
+                    columns: [],
+                    rows: [],
+                    row_count: 0
+                };
             }
+
 
             renderTable(
                 result
             );
+
 
             document.getElementById(
                 "queryMetadata"
@@ -2335,11 +2873,13 @@
                 `History ID: ${data.history_id} · ` +
                 `Execution time: ${data.execution_time_ms ?? "-"} ms`;
 
+
             document.getElementById(
                 "resultsContainer"
             ).classList.remove(
                 "hidden"
             );
+
 
             showSection(
                 "querySection",
@@ -2368,6 +2908,7 @@
                 "rulesList"
             );
 
+
         if (!currentConnectionId) {
 
             container.innerHTML =
@@ -2376,8 +2917,10 @@
             return;
         }
 
+
         container.innerHTML =
             '<div class="empty-state">Loading...</div>';
+
 
         try {
 
@@ -2389,12 +2932,15 @@
             const data =
                 await response.json();
 
+
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Failed to load business rules."
                 );
             }
+
 
             if (data.length === 0) {
 
@@ -2404,7 +2950,9 @@
                 return;
             }
 
+
             container.innerHTML = "";
+
 
             data.forEach(
                 rule => {
@@ -2416,6 +2964,7 @@
 
                     card.className =
                         "list-card";
+
 
                     card.innerHTML = `
                         <div class="list-card-title">
@@ -2439,6 +2988,7 @@
                             </button>
                         </div>
                     `;
+
 
                     container.appendChild(
                         card
@@ -2465,54 +3015,83 @@
             return;
         }
 
+
         document
-            .getElementById("ruleModal")
-            .classList.add("open");
+            .getElementById(
+                "ruleModal"
+            )
+            .classList.add(
+                "open"
+            );
     }
 
 
     function closeRuleModal() {
 
         document
-            .getElementById("ruleModal")
-            .classList.remove("open");
+            .getElementById(
+                "ruleModal"
+            )
+            .classList.remove(
+                "open"
+            );
     }
 
 
     async function saveBusinessRule() {
 
         const payload = {
+
             connection_id:
                 currentConnectionId,
 
             title:
                 document
-                    .getElementById("ruleTitle")
+                    .getElementById(
+                        "ruleTitle"
+                    )
                     .value
                     .trim(),
 
             description:
                 document
-                    .getElementById("ruleDescription")
+                    .getElementById(
+                        "ruleDescription"
+                    )
                     .value
                     .trim(),
 
             table_names:
                 document
-                    .getElementById("ruleTables")
+                    .getElementById(
+                        "ruleTables"
+                    )
                     .value
                     .split(",")
-                    .map(value => value.trim())
-                    .filter(Boolean),
+                    .map(
+                        value =>
+                            value.trim()
+                    )
+                    .filter(
+                        Boolean
+                    ),
 
             column_names:
                 document
-                    .getElementById("ruleColumns")
+                    .getElementById(
+                        "ruleColumns"
+                    )
                     .value
                     .split(",")
-                    .map(value => value.trim())
-                    .filter(Boolean)
+                    .map(
+                        value =>
+                            value.trim()
+                    )
+                    .filter(
+                        Boolean
+                    )
         };
+
 
         if (
             !payload.title ||
@@ -2529,6 +3108,7 @@
             return;
         }
 
+
         try {
 
             const response =
@@ -2537,23 +3117,48 @@
                     {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json"
+                            "Content-Type":
+                                "application/json"
                         },
-                        body: JSON.stringify(payload)
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
                     }
                 );
+
 
             const data =
                 await response.json();
 
+
             if (!response.ok) {
+
                 throw new Error(
                     data.detail ||
                     "Failed to save business rule."
                 );
             }
 
+
             closeRuleModal();
+
+            document.getElementById(
+                "ruleTitle"
+            ).value = "";
+
+            document.getElementById(
+                "ruleDescription"
+            ).value = "";
+
+            document.getElementById(
+                "ruleTables"
+            ).value = "";
+
+            document.getElementById(
+                "ruleColumns"
+            ).value = "";
+
 
             await loadBusinessRules();
 
@@ -2580,6 +3185,7 @@
             return;
         }
 
+
         try {
 
             const response =
@@ -2589,6 +3195,7 @@
                         method: "DELETE"
                     }
                 );
+
 
             if (
                 !response.ok &&
@@ -2603,6 +3210,7 @@
                     "Failed to delete business rule."
                 );
             }
+
 
             await loadBusinessRules();
 
@@ -2640,7 +3248,9 @@
     function hideQueryError() {
 
         document
-            .getElementById("queryError")
+            .getElementById(
+                "queryError"
+            )
             .classList.add(
                 "hidden"
             );
@@ -2663,7 +3273,11 @@
 
         element.className =
             "message " +
-            (isError ? "error" : "success");
+            (
+                isError
+                    ? "error"
+                    : "success"
+            );
 
         element.classList.remove(
             "hidden"
@@ -2671,29 +3285,55 @@
     }
 
 
-    function escapeHtml(value) {
+    function escapeHtml(
+        value
+    ) {
 
         return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
     }
 
 
-    function formatDate(value) {
+    function formatDate(
+        value
+    ) {
 
         if (!value) {
             return "-";
         }
 
+
         const date =
             new Date(value);
 
-        if (Number.isNaN(date.getTime())) {
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
             return value;
         }
+
 
         return date.toLocaleString();
     }
