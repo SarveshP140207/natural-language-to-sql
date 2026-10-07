@@ -1,49 +1,89 @@
-from app.validation.schema_validator import validate_tables_and_columns
+import pytest
+from sqlglot import parse_one
+
+from app.validation.schema_validator import validate_generated_sql
 
 
-tests = [
-    {
-        "name": "Valid customers table",
-        "tables": {"customers"},
-        "columns": {
-            "customers": {"customer_id", "first_name", "email"}
-        }
-    },
-    {
-        "name": "Valid products table",
-        "tables": {"products"},
-        "columns": {
-            "products": {"product_id", "product_name", "price"}
-        }
-    },
-    {
-        "name": "Invalid table",
-        "tables": {"employees"},
-        "columns": {
-            "employees": {"employee_id"}
-        }
-    },
-    {
-        "name": "Invalid column",
-        "tables": {"customers"},
-        "columns": {
-            "customers": {"customer_id", "customer_name"}
-        }
-    }
-]
+def test_valid_customers_query():
+    expression = parse_one(
+        """
+        SELECT
+            c.customer_id,
+            c.first_name,
+            c.email
+        FROM customers AS c
+        """
+    )
+
+    assert validate_generated_sql(expression) is True
 
 
-for test in tests:
-    print(f"\nTest: {test['name']}")
+def test_valid_products_query():
+    expression = parse_one(
+        """
+        SELECT
+            p.product_id,
+            p.product_name,
+            p.price
+        FROM products AS p
+        """
+    )
 
-    try:
-        validate_tables_and_columns(
-            test["tables"],
-            test["columns"]
-        )
+    assert validate_generated_sql(expression) is True
 
-        print("ALLOWED")
 
-    except ValueError as e:
-        print("BLOCKED")
-        print("Reason:", e)
+def test_invalid_table():
+    expression = parse_one(
+        """
+        SELECT
+            e.employee_id
+        FROM employees AS e
+        """
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Table 'employees' does not exist",
+    ):
+        validate_generated_sql(expression)
+
+
+def test_invalid_column():
+    expression = parse_one(
+        """
+        SELECT
+            c.customer_id,
+            c.customer_name
+        FROM customers AS c
+        """
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Column 'customer_name' does not exist",
+    ):
+        validate_generated_sql(expression)
+
+
+def test_select_star_is_allowed():
+    expression = parse_one(
+        """
+        SELECT *
+        FROM customers
+        """
+    )
+
+    assert validate_generated_sql(expression) is True
+
+
+def test_table_alias_is_resolved():
+    expression = parse_one(
+        """
+        SELECT
+            c.customer_id,
+            c.email
+        FROM customers AS c
+        """
+    )
+
+    assert validate_generated_sql(expression) is True
