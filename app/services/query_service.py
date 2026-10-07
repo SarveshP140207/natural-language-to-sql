@@ -18,14 +18,24 @@ from app.validation.sql_parser import parse_sql
 MAX_REPAIR_ATTEMPTS = 2
 
 
-def validate_and_prepare_sql(sql: str) -> str:
+def validate_and_prepare_sql(
+    sql: str,
+    database_connection: DatabaseConnection | None = None,
+) -> str:
     expression = parse_sql(sql)
 
-    validate_generated_sql(expression)
+    validate_generated_sql(
+        expression,
+        database_connection,
+    )
 
-    validated_sql = expression.sql(dialect="mysql")
+    validated_sql = expression.sql(
+        dialect="mysql"
+    )
 
-    return apply_query_limit(validated_sql)
+    return apply_query_limit(
+        validated_sql
+    )
 
 
 def process_query(
@@ -35,7 +45,9 @@ def process_query(
     conversation_id: int | None = None,
 ):
     if not question or not question.strip():
-        raise ValueError("Question cannot be empty.")
+        raise ValueError(
+            "Question cannot be empty."
+        )
 
     conversation_context = ""
 
@@ -51,16 +63,23 @@ def process_query(
             limit=5,
         )
 
-    sql = generate_sql(
+    current_sql = generate_sql(
         question=question,
         conversation_context=conversation_context,
         database_connection=database_connection,
     )
 
-    prepared_sql = validate_and_prepare_sql(sql)
+    prepared_sql = None
 
-    for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
+    for attempt in range(
+        MAX_REPAIR_ATTEMPTS + 1
+    ):
         try:
+            prepared_sql = validate_and_prepare_sql(
+                current_sql,
+                database_connection,
+            )
+
             execution_start = perf_counter()
 
             result = execute_read_only_query(
@@ -108,12 +127,14 @@ def process_query(
             if attempt >= MAX_REPAIR_ATTEMPTS:
                 raise
 
-            repaired_sql = repair_sql(
-                question=question,
-                sql=prepared_sql,
-                error=str(error),
+            repair_input = (
+                prepared_sql
+                if prepared_sql is not None
+                else current_sql
             )
 
-            prepared_sql = validate_and_prepare_sql(
-                repaired_sql,
+            current_sql = repair_sql(
+                question=question,
+                sql=repair_input,
+                error=str(error),
             )

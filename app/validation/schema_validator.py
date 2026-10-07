@@ -2,22 +2,40 @@ from sqlalchemy import inspect
 from sqlglot import exp
 
 from app.database.connection import engine
+from app.database.models import DatabaseConnection
+from app.database.executor import create_connection_engine
 
 
-def get_database_schema_map():
-    inspector = inspect(engine)
+def get_database_schema_map(
+    database_connection: DatabaseConnection | None = None,
+):
+    if database_connection is None:
+        query_engine = engine
+        owns_engine = False
+    else:
+        query_engine = create_connection_engine(
+            database_connection
+        )
+        owns_engine = True
 
-    schema_map = {}
+    try:
+        inspector = inspect(query_engine)
 
-    for table_name in inspector.get_table_names():
-        columns = inspector.get_columns(table_name)
+        schema_map = {}
 
-        schema_map[table_name] = {
-            column["name"]
-            for column in columns
-        }
+        for table_name in inspector.get_table_names():
+            columns = inspector.get_columns(table_name)
 
-    return schema_map
+            schema_map[table_name] = {
+                column["name"]
+                for column in columns
+            }
+
+        return schema_map
+
+    finally:
+        if owns_engine:
+            query_engine.dispose()
 
 
 def extract_tables(expression):
@@ -31,8 +49,6 @@ def extract_tables(expression):
 
 def extract_columns(expression):
     columns = {}
-
-    # Build alias -> real table mapping.
     aliases = {}
 
     for table in expression.find_all(exp.Table):
@@ -49,31 +65,34 @@ def extract_columns(expression):
         if table_name:
             real_table_name = aliases.get(
                 table_name,
-                table_name
+                table_name,
             )
 
             columns.setdefault(
                 real_table_name,
-                set()
+                set(),
             ).add(column_name)
 
     return columns
 
 
-def validate_generated_sql(expression):
-    schema_map = get_database_schema_map()
+def validate_generated_sql(
+    expression,
+    database_connection: DatabaseConnection | None = None,
+):
+    schema_map = get_database_schema_map(
+        database_connection
+    )
 
     tables = extract_tables(expression)
     columns = extract_columns(expression)
 
-    # Validate tables.
     for table in tables:
         if table not in schema_map:
             raise ValueError(
                 f"Table '{table}' does not exist in the database."
             )
 
-    # Validate columns.
     for table, requested_columns in columns.items():
         if table not in schema_map:
             raise ValueError(
