@@ -12,6 +12,7 @@ from app.services.connection_service import (
     get_user_connection,
     get_user_connections,
 )
+from app.services.schema_version_service import sync_schema_version
 
 
 router = APIRouter(
@@ -65,7 +66,9 @@ def add_database_connection(
 def list_database_connections(
     current_user: User = Depends(get_current_user),
 ):
-    connections = get_user_connections(current_user.user_id)
+    connections = get_user_connections(
+        current_user.user_id
+    )
 
     return [
         DatabaseConnectionResponse(
@@ -110,7 +113,9 @@ def test_saved_database_connection(
 
         return {
             "connection_id": connection.connection_id,
-            "status": "success" if success else "failed",
+            "status": "success"
+            if success
+            else "failed",
             "message": "Database connection successful."
             if success
             else "Database connection failed.",
@@ -122,3 +127,58 @@ def test_saved_database_connection(
             "status": "failed",
             "message": f"Database connection failed: {error}",
         }
+
+
+@router.post(
+    "/connections/{connection_id}/schema/sync",
+)
+def sync_saved_database_schema(
+    connection_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    connection = get_user_connection(
+        user_id=current_user.user_id,
+        connection_id=connection_id,
+    )
+
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database connection not found.",
+        )
+
+    try:
+        result = sync_schema_version(
+            connection
+        )
+
+        version = result["version"]
+
+        return {
+            "connection_id": connection.connection_id,
+            "changed": result["changed"],
+            "schema_version_id": (
+                version.schema_version_id
+                if version
+                else None
+            ),
+            "version_hash": result["version_hash"],
+            "indexed_documents": result["indexed_documents"],
+            "tables": [
+                table["name"]
+                for table in result["schema"]["tables"]
+            ],
+            "message": (
+                "Schema changed. A new version was created "
+                "and the RAG index was rebuilt."
+                if result["changed"]
+                else
+                "Schema unchanged. Existing RAG index is still current."
+            ),
+        }
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Schema synchronization failed: {error}",
+        )

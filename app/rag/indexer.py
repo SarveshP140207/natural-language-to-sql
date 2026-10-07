@@ -24,16 +24,26 @@ def get_collection_name(
     return f"{COLLECTION_PREFIX}_{database_connection.connection_id}"
 
 
-def create_collection(
+def collection_exists(
     client,
     collection_name: str,
-):
+) -> bool:
     existing_collections = [
         collection.name
         for collection in client.get_collections().collections
     ]
 
-    if collection_name not in existing_collections:
+    return collection_name in existing_collections
+
+
+def create_collection(
+    client,
+    collection_name: str,
+):
+    if not collection_exists(
+        client,
+        collection_name,
+    ):
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
@@ -45,6 +55,7 @@ def create_collection(
 
 def index_schema(
     database_connection: DatabaseConnection | None = None,
+    rebuild: bool = False,
 ):
     documents = generate_schema_documents(
         database_connection,
@@ -57,6 +68,14 @@ def index_schema(
         database_connection,
     )
 
+    if rebuild and collection_exists(
+        client,
+        collection_name,
+    ):
+        client.delete_collection(
+            collection_name=collection_name,
+        )
+
     create_collection(
         client,
         collection_name,
@@ -67,7 +86,9 @@ def index_schema(
         for document in documents
     ]
 
-    embeddings = embedding_model.encode(texts)
+    embeddings = embedding_model.encode(
+        texts
+    )
 
     points = []
 
