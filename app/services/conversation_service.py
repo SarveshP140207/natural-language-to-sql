@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, select
 
@@ -151,7 +151,7 @@ def add_conversation_message(
         )
 
         if conversation:
-            conversation.updated_at = datetime.utcnow()
+            conversation.updated_at = datetime.now(UTC)
 
         db.commit()
         db.refresh(message)

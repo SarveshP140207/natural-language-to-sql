@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 
@@ -202,7 +202,7 @@ def update_business_rule(
         rule.description = description
         rule.table_names = _encode_list(table_names)
         rule.column_names = _encode_list(column_names)
-        rule.updated_at = datetime.utcnow()
+        rule.updated_at = datetime.now(UTC)
 
         db.commit()
         db.refresh(rule)
