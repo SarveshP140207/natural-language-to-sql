@@ -50,6 +50,7 @@ def extract_tables(expression):
 def extract_columns(expression):
     columns = {}
     aliases = {}
+    unqualified_columns = set()
 
     for table in expression.find_all(exp.Table):
         table_name = table.name
@@ -62,6 +63,9 @@ def extract_columns(expression):
         table_name = column.table
         column_name = column.name
 
+        if column_name == "*":
+            continue
+
         if table_name:
             real_table_name = aliases.get(
                 table_name,
@@ -72,6 +76,14 @@ def extract_columns(expression):
                 real_table_name,
                 set(),
             ).add(column_name)
+
+        else:
+            unqualified_columns.add(
+                column_name
+            )
+
+    if unqualified_columns:
+        columns[None] = unqualified_columns
 
     return columns
 
@@ -94,6 +106,29 @@ def validate_generated_sql(
             )
 
     for table, requested_columns in columns.items():
+
+        if table is None:
+            for column in requested_columns:
+                matching_tables = [
+                    table_name
+                    for table_name in tables
+                    if column in schema_map[table_name]
+                ]
+
+                if not matching_tables:
+                    raise ValueError(
+                        f"Column '{column}' does not exist "
+                        f"in the referenced tables."
+                    )
+
+                if len(matching_tables) > 1:
+                    raise ValueError(
+                        f"Column '{column}' is ambiguous "
+                        f"across the referenced tables."
+                    )
+
+            continue
+
         if table not in schema_map:
             raise ValueError(
                 f"Table '{table}' does not exist in the database."
