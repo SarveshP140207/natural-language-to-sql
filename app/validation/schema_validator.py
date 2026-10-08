@@ -47,10 +47,20 @@ def extract_tables(expression):
     return tables
 
 
-def extract_columns(expression):
-    columns = {}
+def extract_select_aliases(expression):
+    aliases = set()
+
+    for alias in expression.find_all(exp.Alias):
+        alias_name = alias.alias
+
+        if alias_name:
+            aliases.add(alias_name)
+
+    return aliases
+
+
+def extract_table_aliases(expression):
     aliases = {}
-    unqualified_columns = set()
 
     for table in expression.find_all(exp.Table):
         table_name = table.name
@@ -59,6 +69,22 @@ def extract_columns(expression):
         if alias:
             aliases[alias] = table_name
 
+    return aliases
+
+
+def extract_columns(expression):
+    columns = {}
+
+    select_aliases = extract_select_aliases(
+        expression
+    )
+
+    table_aliases = extract_table_aliases(
+        expression
+    )
+
+    unqualified_columns = set()
+
     for column in expression.find_all(exp.Column):
         table_name = column.table
         column_name = column.name
@@ -66,8 +92,11 @@ def extract_columns(expression):
         if column_name == "*":
             continue
 
+        if column_name in select_aliases:
+            continue
+
         if table_name:
-            real_table_name = aliases.get(
+            real_table_name = table_aliases.get(
                 table_name,
                 table_name,
             )
