@@ -114,15 +114,4 @@ The initial system operates in read-only mode.
 
 
 
-\## Development
-
-
-
-The project uses a Python virtual environment:
-
-
-
-```text
-
-.venv/
 
